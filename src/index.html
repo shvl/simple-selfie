@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="index.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <div class="page__video">
+        <div class="video-container">
+          <video
+            id="video"
+            class="video-container__video"
+            width="720"
+            height="560"
+            autoplay
+            muted
+            playsinline
+          ></video>
+          <img class="overlay" src="./overlay.png" width="720" height="560" />
+          <canvas class="source-canvas" width="720" height="560"></canvas>
+        </div>
+        <p class="face-position"></p>
+        <div>
+          <button class="capture">Capture a picture</button>
+        </div>
+      </div>
+      <div class="page__results">
+        <div class="result-image">
+          <img class="result-image__image" src="" alt="" />
+          <p class="result-image__blurred"></p>
+          <div>
+            <button class="download">Download</button>
+          </div>
+        </div>
+        <div class="result-image">
+          <details>
+            <summary>Edge detection</summary>
+            <img class="result-image__laplacian" src="" alt="" />
+            <div>
+              <button class="download">Download</button>
+            </div>
+          </details>
+        </div>
+        <canvas class="dest-canvas" width="720" height="560"></canvas>
+      </div>
+    </div>
+    <script>
+      var exports = {};
+      document.addEventListener("DOMContentLoaded", () => {
+        const videoContainer = document.querySelector(".video-container");
+        const video = document.getElementById("video");
+        const p = document.querySelector("p");
+        const overlay = document.querySelector(".overlay");
+        const sourceCanvas = document.querySelector(".source-canvas");
+        const destCanvas = document.querySelector(".dest-canvas");
+        const sourceCtx = sourceCanvas.getContext("2d");
+        const destCtx = destCanvas.getContext("2d");
+        const button = document.querySelector(".capture");
+        const result = document.querySelector(".result-image__blurred");
+        const resultImage = document.querySelector(".result-image__image");
+        const resultLaplacian = document.querySelector(
+          ".result-image__laplacian"
+        );
+        const download = document.querySelector(".download");
+        const pageResults = document.querySelector(".page__results");
+        const pageVideo = document.querySelector(".page__video");
+
+        selfieLoad({
+          video,
+          videoContainer,
+          overlay,
+          onFrameProcessed: ({ face }) => {
+            console.log({
+              left: face.direction.isLookLeft(),
+              right: face.direction.isLookRight(),
+              up: face.direction.isLookUp(),
+              down: face.direction.isLookDown(),
+            })
+            
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
