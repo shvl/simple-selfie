@@ -5,7 +5,7 @@ const KERNEL = [0, 1, 0, 1, -4, 1, 0, 1, 0];
 function laplacian(frame: Frame, data: Uint8ClampedArray): Promise<Uint8ClampedArray> {
   return new Promise((resolve) => {
     const newData = new Uint8ClampedArray(data.length);
-    const THICKNESS = 2;
+    const THICKNESS = 3;
     let { width, height } = frame;
     width = Math.floor(width);
     height = Math.floor(height);
@@ -13,7 +13,7 @@ function laplacian(frame: Frame, data: Uint8ClampedArray): Promise<Uint8ClampedA
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
         let sum = 0;
-        let index = y * width * 4 + x * 4; // Index of the current pixel
+        let index = y * width * 4 + x * 4;
 
         for (let i = -1; i <= 1; i++) {
           for (let j = -1; j <= 1; j++) {

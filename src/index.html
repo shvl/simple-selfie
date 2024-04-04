@@ -71,15 +71,22 @@
             width: video.width,
             height: video.height,
           };
+          const faceFrame = {
+            width: 200,
+            height: 200,
+          };
           const pipeline = new PipelineSplitter();
           const blurPipeline = new Pipeline();
           const imageStage = pipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, frame)));
           pipeline.addStage(blurPipeline);
-          const stage1 = blurPipeline.addStage(
+          blurPipeline.addStage(
             new PipelineBasicStage(SelfieProcessors.cropFrame.bind(null, frame, lastFaceFrame))
           );
-          const stage2 = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.laplacian.bind(null, lastFaceFrame)));
-          // const blurImageStage = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, lastFaceFrame)));
+          blurPipeline.addStage(
+            new PipelineBasicStage(SelfieProcessors.resizeFrame.bind(null, lastFaceFrame, faceFrame))
+          );
+          blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.laplacian.bind(null, faceFrame)));
+          // const blurImageStage = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, faceFrame)));
           const blurVariance = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.variance));
 
           await selfie.captureImage(pipeline);
