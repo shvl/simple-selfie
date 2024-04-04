@@ -10,17 +10,9 @@
     <div class="page">
       <div class="page__video">
         <div class="video-container">
-          <video
-            id="video"
-            class="video-container__video"
-            width="720"
-            height="560"
-            autoplay
-            muted
-            playsinline
-          ></video>
-          <img class="overlay" src="./overlay.png" width="720" height="560" />
-          <canvas class="source-canvas" width="720" height="560"></canvas>
+          <video id="video" class="video-container__video" width="720" height="560" autoplay muted playsinline></video>
+          <!-- <img class="overlay" src="./overlay.png" width="720" height="560" /> -->
+          <!-- <canvas style="position: absolute;top: 0;left: 0;" class="source-canvas" width="720" height="560"></canvas> -->
         </div>
         <p class="face-position"></p>
         <div>
@@ -44,44 +36,65 @@
             </div>
           </details>
         </div>
-        <canvas class="dest-canvas" width="720" height="560"></canvas>
       </div>
     </div>
     <script>
       var exports = {};
-      document.addEventListener("DOMContentLoaded", () => {
-        const videoContainer = document.querySelector(".video-container");
-        const video = document.getElementById("video");
-        const p = document.querySelector("p");
-        const overlay = document.querySelector(".overlay");
-        const sourceCanvas = document.querySelector(".source-canvas");
-        const destCanvas = document.querySelector(".dest-canvas");
-        const sourceCtx = sourceCanvas.getContext("2d");
-        const destCtx = destCanvas.getContext("2d");
-        const button = document.querySelector(".capture");
-        const result = document.querySelector(".result-image__blurred");
-        const resultImage = document.querySelector(".result-image__image");
-        const resultLaplacian = document.querySelector(
-          ".result-image__laplacian"
-        );
-        const download = document.querySelector(".download");
-        const pageResults = document.querySelector(".page__results");
-        const pageVideo = document.querySelector(".page__video");
+      document.addEventListener('DOMContentLoaded', async () => {
+        const videoContainer = document.querySelector('.video-container');
+        const video = document.getElementById('video');
+        const p = document.querySelector('p');
+        const overlay = document.querySelector('.overlay');
+        const button = document.querySelector('.capture');
+        const result = document.querySelector('.result-image__blurred');
+        const resultImage = document.querySelector('.result-image__image');
+        const resultLaplacian = document.querySelector('.result-image__laplacian');
+        const download = document.querySelector('.download');
+        const pageResults = document.querySelector('.page__results');
+        const pageVideo = document.querySelector('.page__video');
 
-        selfieLoad({
+        let lastFaceFrame = null;
+
+        const selfie = new Selfie({
           video,
           videoContainer,
           overlay,
-          onFrameProcessed: ({ face }) => {
-            console.log({
-              left: face.direction.isLookLeft(),
-              right: face.direction.isLookRight(),
-              up: face.direction.isLookUp(),
-              down: face.direction.isLookDown(),
-            })
-            
+          onFrameProcessed: ({ faceFrame }) => {
+            lastFaceFrame = faceFrame;
           },
         });
+
+        button.addEventListener('click', async () => {
+          const { PipelineSplitter, Pipeline, PipelineBasicStage } = SelfiePipeline;
+
+          const frame = {
+            width: video.width,
+            height: video.height,
+          };
+          const pipeline = new PipelineSplitter();
+          const blurPipeline = new Pipeline();
+          const imageStage = pipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, frame)));
+          pipeline.addStage(blurPipeline);
+          const stage1 = blurPipeline.addStage(
+            new PipelineBasicStage(SelfieProcessors.cropFrame.bind(null, frame, lastFaceFrame))
+          );
+          const stage2 = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.laplacian.bind(null, lastFaceFrame)));
+          // const blurImageStage = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, lastFaceFrame)));
+          const blurVariance = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.variance));
+
+          await selfie.captureImage(pipeline);
+
+          const image = await imageStage.getResult();
+          const blur = await blurVariance.getResult();
+          // const blurImage = await blurImageStage.getResult();
+
+          resultImage.src = image;
+          // resultLaplacian.src = blurImage;
+          console.log(blur);
+        });
+
+        await selfie.start();
+        selfie.startProcessingLoop();
       });
     </script>
   </body>
