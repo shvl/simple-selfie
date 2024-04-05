@@ -24,6 +24,7 @@ export class Selfie {
   private lastFaceFrame: Frame = {} as Frame;
   private onFrameProcessedCallback = (() => {}) as (processedFrame: any) => void;
   private canvas: HTMLCanvasElement | null = null;
+  private outputCanvas: HTMLCanvasElement | null = null;
   private video: HTMLVideoElement | null = null;
 
   constructor(config: SelfieConfig) {
@@ -37,7 +38,29 @@ export class Selfie {
   }
 
   async start() {
-    const { video, videoContainer, overlay } = this.config;
+    const { video, videoContainer } = this.config;
+    video.style.width = '1px';
+    video.style.height = '1px';
+    video.style.visibility = 'hidden';
+    video.style.position = 'absolute';
+    
+    this.outputCanvas = document.createElement('canvas');
+    this.outputCanvas.width = this.video?.videoWidth || this.frame.width;
+    this.outputCanvas.height = this.video?.videoHeight || this.frame.height;
+    video.insertAdjacentElement('afterend', this.outputCanvas);
+
+    const updateCanvas = () => {
+      const canvas = this.outputCanvas;
+      const ctx = this.outputCanvas?.getContext('2d');
+      if (!ctx || !canvas) {
+        return;
+      }
+  
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      video.requestVideoFrameCallback(updateCanvas);
+    };
+    video.requestVideoFrameCallback(updateCanvas);
+    
     video.addEventListener('play', async () => {
       this.canvas = faceapi.createCanvasFromMedia(video);
       this.canvas.style.position = 'absolute';
@@ -54,7 +77,11 @@ export class Selfie {
 
     return navigator.mediaDevices
       .getUserMedia({
-        video: {},
+        video: {
+          width:this.frame.width,
+          height: this.frame.height,
+          facingMode: 'user',
+        },
       })
       .then((stream) => {
         video.srcObject = stream;
@@ -101,18 +128,12 @@ export class Selfie {
     if (!this.video) {
         throw new Error('Video not initialized');
     }
-    const canvas = document.createElement('canvas');
-    canvas.width = this.video.width;
-    canvas.height = this.video.height;
-    const sourceCtx = canvas.getContext('2d');
-    sourceCtx?.drawImage(this.video, 0, 0, this.video.width, this.video.height);
-    const frame = sourceCtx?.getImageData(
+    const frame = this.outputCanvas?.getContext('2d')?.getImageData(
       0,
       0,
-      this.video.width,
-      this.video.height
+      this.video.videoWidth,
+      this.video.videoHeight
     );
-    canvas.remove();
 
     const inputData = frame?.data;
 
