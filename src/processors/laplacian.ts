@@ -5,7 +5,7 @@ const KERNEL = [0, 1, 0, 1, -4, 1, 0, 1, 0];
 function laplacian(frame: Frame, data: Uint8ClampedArray): Promise<Uint8ClampedArray> {
   return new Promise((resolve) => {
     const newData = new Uint8ClampedArray(data.length);
-    const THICKNESS = 3;
+    const THICKNESS = 2;
     let { width, height } = frame;
     width = Math.floor(width);
     height = Math.floor(height);

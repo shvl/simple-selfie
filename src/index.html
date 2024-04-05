@@ -44,6 +44,20 @@
       .overlay_visible {
         opacity: 0.5;
       }
+      .result-image {
+        position: relative;
+      }
+      .result-image__blurred {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: #ccffcc;
+        text-shadow: 0 0 2px #000000;
+      }
+
+      .result-image__blurred_blurred {
+        color: #ffcccc;
+      }
     </style>
   </head>
   <body>
@@ -104,9 +118,6 @@
               <details>
                 <summary>Edge detection</summary>
                 <img class="result-image__laplacian" src="" alt="" />
-                <div>
-                  <button class="download">Download</button>
-                </div>
               </details>
             </div>
           </div>
@@ -120,7 +131,7 @@
         const video = document.getElementById('video');
         const overlay = document.querySelector('.overlay');
         const captureButton = document.querySelector('.capture');
-        const result = document.querySelector('.result-image__blurred');
+        const resultImageBlurred = document.querySelector('.result-image__blurred');
         const resultImage = document.querySelector('.result-image__image');
         const resultLaplacian = document.querySelector('.result-image__laplacian');
         const download = document.querySelector('.download');
@@ -161,8 +172,6 @@
         });
 
         captureButton.addEventListener('click', async () => {
-          const { PipelineSplitter, Pipeline, PipelineBasicStage } = SelfiePipeline;
-
           const frame = {
             width: 720,
             height: 560,
@@ -171,28 +180,27 @@
             width: 200,
             height: 200,
           };
-          const pipeline = new PipelineSplitter();
-          const blurPipeline = new Pipeline();
-          const imageStage = pipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, frame)));
-          pipeline.addStage(blurPipeline);
-          blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.cropFrame.bind(null, frame, lastFaceFrame)));
-          blurPipeline.addStage(
-            new PipelineBasicStage(SelfieProcessors.resizeFrame.bind(null, lastFaceFrame, faceFrame))
-          );
-          blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.laplacian.bind(null, faceFrame)));
-          // const blurImageStage = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.toImage.bind(null, faceFrame)));
-          const blurVariance = blurPipeline.addStage(new PipelineBasicStage(SelfieProcessors.variance));
 
-          await selfie.captureImage(pipeline);
-
-          const image = await imageStage.getResult();
-          const blur = await blurVariance.getResult();
-          // const blurImage = await blurImageStage.getResult();
+          const data = selfie.captureImage();
+          const image = await SelfieProcessors.toImage(frame, data);
+          const cropped = await SelfieProcessors.cropFrame(frame, lastFaceFrame, data);
+          const resized = await SelfieProcessors.resizeFrame(lastFaceFrame, faceFrame, cropped);
+          const laplacian = await SelfieProcessors.laplacian(faceFrame, resized);
+          const laplacianImage = await SelfieProcessors.toImage(faceFrame, laplacian);
+          const blurVarianceResult = await SelfieProcessors.variance(laplacian);
 
           resultImage.src = image;
-          // resultLaplacian.src = blurImage;
+          resultLaplacian.src = laplacianImage;
+
+          resultImageBlurred.textContent = 'Not blurred ' + blurVarianceResult;
+          if (blurVarianceResult < 1400) {
+            resultImageBlurred.classList.add('result-image__blurred_blurred');
+            resultImageBlurred.textContent = 'Blurred ' + blurVarianceResult;
+          } else {
+            resultImageBlurred.classList.remove('result-image__blurred_blurred');
+          }
+
           capturedImageModal.showModal();
-          console.log(blur);
         });
 
         await selfie.start();
@@ -200,6 +208,17 @@
 
         capturedImageModalClose.addEventListener('click', () => {
           capturedImageModal.close();
+        });
+
+        download.addEventListener('click', (event) => {
+          const image = event.target.closest('.result-image').querySelector('img');
+          const a = document.createElement('a');
+          a.href = image.src;
+          a.download = 'result.png';
+          a.click();
+          setTimeout(() => {
+            a.remove();
+          }, 100);
         });
       });
     </script>

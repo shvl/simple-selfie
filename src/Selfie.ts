@@ -3,7 +3,6 @@ import { SelfieConfig } from './types/SelfieConfig';
 import { Frame } from './types/Frame';
 import { Face } from './Face';
 import { getFaceFrame } from './utils/getFaceFrame';
-import { Pipeline } from './pipeline/Pipeline';
 
 const roundFrame = (frame: Frame) => ({
   x: Math.round(frame.x),
@@ -124,7 +123,7 @@ export class Selfie {
     }
   }
 
-  async captureImage(pipeline: Pipeline<any, any>): Promise<any> {
+  captureImage(): Uint8ClampedArray {
     if (!this.video) {
         throw new Error('Video not initialized');
     }
@@ -136,9 +135,6 @@ export class Selfie {
     );
 
     const inputData = frame?.data;
-
-    const output = await pipeline.process(inputData);
-
-    return output;
+    return inputData || new Uint8ClampedArray();
   }
 }
