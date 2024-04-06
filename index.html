@@ -132,8 +132,8 @@
 
         captureButton.addEventListener('click', async () => {
           const frame = {
-            width: 720,
-            height: 560,
+            width: selfie.video.videoWidth,
+            height: selfie.video.videoHeight,
           };
           const faceFrame = {
             width: 200,
