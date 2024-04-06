@@ -14,14 +14,15 @@
         display: flex;
         justify-content: center;
         position: absolute;
-        width: calc(100% - clamp(10px, 3vw, 20px));
-        aspect-ratio: 1;
+        /* aspect-ratio: 1; */
+        /* some for the case when aspect radio is not working */
+        width: min(560px, calc(min(100vw, 100vh) - 16px - clamp(10px, 3vw, 20px)));
+        height: min(560px, calc(min(100vw, 100vh) - 16px - clamp(10px, 3vw, 20px)));
         top: calc(clamp(10px, 3vw, 20px) / 2);
       }
       .face-position{
-        max-width: calc(clamp(580px, 3vw, 600px));
-        aspect-ratio: 1;
-        width: 100%;
+        width: min(580px, calc(min(100vw, 100vh) - 16px));
+        height: min(580px, calc(min(100vw, 100vh) - 16px));
       }
       .face-position__direction {
         opacity: 0;
