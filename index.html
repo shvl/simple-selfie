@@ -14,17 +14,31 @@
         display: flex;
         justify-content: center;
         position: absolute;
-        aspect-ratio: 1;
+        /* aspect-ratio: 1; */
         /* some for the case when aspect radio is not supported (iphone) */
-        width: calc(100% - 20px);
+        width: 560px;
+        height: 560px;
         top: 10px
       }
       .face-position {
-        aspect-ratio: 1;
-        max-width: 580px;
-        width: 100%;
+        width: 580px;
+        height: 580px;
       }
 
+      @media (width < 600px) {
+        .video-container {
+          width: calc(339px);
+          height: calc(339px);
+        }
+        .video-container canvas {
+          width: 450px;
+          height: 350px;
+        }
+        .face-position {
+          height: 359px;
+          width: 359px;
+        }
+      }
       .face-position__direction {
         opacity: 0;
         transition: opacity 0.5s;
