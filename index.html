@@ -14,36 +14,15 @@
         display: flex;
         justify-content: center;
         position: absolute;
-        /* aspect-ratio: 1; */
+        aspect-ratio: 1;
         /* some for the case when aspect radio is not supported (iphone) */
-        width: min(560px, calc(min(100vw, 100vh) - 16px - clamp(10px, 3vw, 20px)));
-        height: min(560px, calc(min(100vw, 100vh) - 16px - clamp(10px, 3vw, 20px)));
-        top: calc(clamp(10px, 3vw, 20px) / 2);
-      }
-      .video-container canvas {
-        height: min(560px, calc((min(100vw, 100vh) - 16px - clamp(10px, 3vw, 20px))));
-        width: min(720px, calc((min(100vw, 100vh) - 16px - clamp(10px, 3vw, 20px)) * 1.2857142857142858));
-        transition: width 0.5s, height 0.5s;
+        width: calc(100% - 20px);
+        top: 10px
       }
       .face-position {
-        width: min(580px, calc(min(100vw, 100vh) - 16px));
-        height: min(580px, calc(min(100vw, 100vh) - 16px));
-      }
-
-      @media (width < 600px) {
-        .video-container {
-          width: calc(349px);
-          height: calc(349px);
-          /* top: 10px; */
-        }
-        .video-container canvas {
-          width: 450px;
-          height: 350px;
-        }
-        .face-position {
-          height: 359px;
-          width: 359px;
-        }
+        aspect-ratio: 1;
+        max-width: 580px;
+        width: 100%;
       }
 
       .face-position__direction {
