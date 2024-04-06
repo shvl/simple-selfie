@@ -19,11 +19,18 @@
       .video-container {
         border-radius: 50%;
         overflow: hidden;
-        width: 560px;
+        max-width: 560px;
         display: flex;
         justify-content: center;
         position: absolute;
-        top: 20px;
+        width: calc(100% - clamp(10px, 3vw, 20px));
+        aspect-ratio: 1;
+        top: calc(clamp(10px, 3vw, 20px) / 2);
+      }
+      .face-position{
+        max-width: calc(clamp(580px, 3vw, 600px));
+        aspect-ratio: 1;
+        width: 100%;
       }
       .face-position__direction {
         opacity: 0;
@@ -63,7 +70,7 @@
   <body>
     <main class="container">
       <div class="page-video">
-        <svg class="face-position" width="600" height="600" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <svg class="face-position" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
           <g class="face-position__direction face-position__direction_top" transform="rotate(-45, 100, 100)">
             <path d="M100,100 L100,0 A100,100 0 0,1 200,100Z" fill="#b9fa" />
           </g>
@@ -193,7 +200,7 @@
           resultLaplacian.src = laplacianImage;
 
           resultImageBlurred.textContent = 'Not blurred ' + blurVarianceResult;
-          if (blurVarianceResult < 1400) {
+          if (blurVarianceResult < 1100) {
             resultImageBlurred.classList.add('result-image__blurred_blurred');
             resultImageBlurred.textContent = 'Blurred ' + blurVarianceResult;
           } else {
