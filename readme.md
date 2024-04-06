@@ -1,6 +1,6 @@
 Selfie
 
-Vanilla JS Demo: [https://shvl.github.io/selfie](https://shvl.github.io/selfie)
+Vanilla JS Demo: [https://shvl.github.io/simple-selfie](https://shvl.github.io/simple-selfie)
 
 Selfie is a JavaScript library that adds selfie support to your website. It leverages modern face detection algorithms to provide a seamless user experience.
 

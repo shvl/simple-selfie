@@ -1,6 +1,6 @@
-import { Selfie } from './Selfie';
-import * as Processors from './processors';
-import * as Pipeline from './pipeline';
+export { Selfie } from './Selfie';
+export * as Processors from './processors';
+export * as Pipeline from './pipeline';
 
 // @ts-ignore
 window.Selfie = Selfie;

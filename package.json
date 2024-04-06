@@ -1,16 +1,21 @@
 {
-  "name": "selfie",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.ts",
+  "name": "simple-selfie",
+  "version": "0.1.0",
+  "description": "A simple selfie library",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/shvl/simple-selfie",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "deploy": "gh-pages -d dist"
   },
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "face",
+    "selfie"
+  ],
+  "author": "Alex Shvl",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.11.30",
     "copy-webpack-plugin": "^12.0.2",
