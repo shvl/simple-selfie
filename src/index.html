@@ -23,14 +23,30 @@
         display: flex;
         justify-content: center;
         position: absolute;
-        width: calc(100% - clamp(10px, 3vw, 20px));
-        aspect-ratio: 1;
-        top: calc(clamp(10px, 3vw, 20px) / 2);
+        /* aspect-ratio: 1; */
+        /* some for the case when aspect radio is not supported (iphone) */
+        width: 560px;
+        height: 560px;
+        top: 10px
       }
-      .face-position{
-        max-width: calc(clamp(580px, 3vw, 600px));
-        aspect-ratio: 1;
-        width: 100%;
+      .face-position {
+        width: 580px;
+        height: 580px;
+      }
+
+      @media (width < 600px) {
+        .video-container {
+          width: calc(339px);
+          height: calc(339px);
+        }
+        .video-container canvas {
+          width: 450px;
+          height: 350px;
+        }
+        .face-position {
+          height: 359px;
+          width: 359px;
+        }
       }
       .face-position__direction {
         opacity: 0;
@@ -180,8 +196,8 @@
 
         captureButton.addEventListener('click', async () => {
           const frame = {
-            width: 720,
-            height: 560,
+            width: selfie.video.videoWidth,
+            height: selfie.video.videoHeight,
           };
           const faceFrame = {
             width: 200,
@@ -199,7 +215,7 @@
           resultImage.src = image;
           resultLaplacian.src = laplacianImage;
 
-          resultImageBlurred.textContent = 'Not blurred ' + blurVarianceResult;
+          resultImageBlurred.textContent = 'Not blurred ' + Math.round(blurVarianceResult);
           if (blurVarianceResult < 1100) {
             resultImageBlurred.classList.add('result-image__blurred_blurred');
             resultImageBlurred.textContent = 'Blurred ' + blurVarianceResult;
