@@ -45,12 +45,13 @@
         }
       }
 
-      @media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (-webkit-min-device-pixel-ratio: 3) {
+      @media (min-device-width < 450px) and (orientation: portrait){
         .video-container canvas {
           width: 350px;
-          height: 350px;
+          height: 450px;
         }
       }
+
       .face-position__direction {
         opacity: 0;
         transition: opacity 0.5s;
@@ -151,7 +152,7 @@
           resultImage.src = image;
           resultLaplacian.src = laplacianImage;
 
-          resultImageBlurred.textContent = 'Not blurred ' + blurVarianceResult;
+          resultImageBlurred.textContent = 'Not blurred ' + Math.round(blurVarianceResult);
           if (blurVarianceResult < 1100) {
             resultImageBlurred.classList.add('result-image__blurred_blurred');
             resultImageBlurred.textContent = 'Blurred ' + blurVarianceResult;
