@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C9PJ2CNH7X"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+
+      gtag('config', 'G-C9PJ2CNH7X');
+    </script>
     <script src="index.js"></script>
     <style>
       * {
@@ -27,7 +38,7 @@
         /* some for the case when aspect radio is not supported (iphone) */
         width: 560px;
         height: 560px;
-        top: 10px
+        top: 10px;
       }
       .face-position {
         width: 580px;
@@ -101,7 +112,6 @@
           </g>
         </svg>
         <div class="video-container">
-          <video id="video" class="video-container__video" autoplay muted playsinline></video>
           <svg
             class="overlay"
             viewBox="0 0 162.8257 162.75989"
@@ -150,9 +160,7 @@
     <script>
       var exports = {};
       document.addEventListener('DOMContentLoaded', async () => {
-        const videoContainer = document.querySelector('.video-container');
-        const video = document.getElementById('video');
-        const overlay = document.querySelector('.overlay');
+        const container = document.querySelector('.video-container');
         const captureButton = document.querySelector('.capture');
         const resultImageBlurred = document.querySelector('.result-image__blurred');
         const resultImage = document.querySelector('.result-image__image');
@@ -161,6 +169,7 @@
         const pageResults = document.querySelector('.page__results');
         const capturedImageModal = document.querySelector('.captured-image-modal');
         const capturedImageModalClose = document.querySelector('.captured-image-modal__close');
+        const overlay = document.querySelector('.overlay');
         const facePositions = {
           isLookUp: document.querySelector('.face-position__direction_top'),
           isLookRight: document.querySelector('.face-position__direction_left'), //mirroring because of the camera
@@ -169,13 +178,24 @@
         };
 
         let lastFaceFrame = null;
+        const FACE_WIDTH = 170;
+        const FACE_DEVIATION = 45;
 
         const selfie = new Selfie({
-          video,
-          videoContainer,
+          container,
           overlay,
-          onFrameProcessed: ({ face, faceFrame, overlayVisible }) => {
+          onFrameProcessed: ({ face, faceFrame, overlayVisible, detection }) => {
             lastFaceFrame = faceFrame;
+
+            if (detection) {
+              const faceWidth = face.getWidth();
+
+              const deviationFaceWidth = Math.abs(FACE_WIDTH - faceWidth);
+              const deviationFacePosition = face.getFacePosiotion();
+              const overlayVisible =
+                deviationFaceWidth > FACE_DEVIATION || deviationFacePosition > FACE_DEVIATION * 2;
+            }
+
             for (const key in facePositions) {
               if (face.direction[key]()) {
                 facePositions[key].classList.add('face-position__direction_visible');
