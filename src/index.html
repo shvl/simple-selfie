@@ -183,17 +183,21 @@
 
         const selfie = new Selfie({
           container,
-          overlay,
           onFrameProcessed: ({ face, faceFrame, overlayVisible, detection }) => {
             lastFaceFrame = faceFrame;
 
-            if (detection) {
+            if (face) {
               const faceWidth = face.getWidth();
 
               const deviationFaceWidth = Math.abs(FACE_WIDTH - faceWidth);
               const deviationFacePosition = face.getFacePosiotion();
               const overlayVisible =
                 deviationFaceWidth > FACE_DEVIATION || deviationFacePosition > FACE_DEVIATION * 2;
+              if (overlayVisible) {
+                overlay.classList.add('overlay_visible');
+              } else {
+                overlay.classList.remove('overlay_visible');
+              }
             }
 
             for (const key in facePositions) {
@@ -201,12 +205,6 @@
                 facePositions[key].classList.add('face-position__direction_visible');
               } else {
                 facePositions[key].classList.remove('face-position__direction_visible');
-              }
-
-              if (overlayVisible) {
-                overlay.classList.add('overlay_visible');
-              } else {
-                overlay.classList.remove('overlay_visible');
               }
 
               captureButton.disabled = overlayVisible;
