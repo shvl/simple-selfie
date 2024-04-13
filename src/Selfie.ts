@@ -18,12 +18,15 @@ export class Selfie implements ISelfie {
   };
   private debug = false;
   private lastFaceFrame: Frame = {} as Frame;
-  private onFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
+  private onFaceFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
+  private onFrameProcessedCallback: (frameData: Uint8ClampedArray) => Uint8ClampedArray = (frameData) => frameData;
   private canvas: HTMLCanvasElement;
   private isPlayStarted = false;
   private container: HTMLElement;
   private isStoped = false;
   private isFaceDetectionStarted = false;
+  private processingCanvas: HTMLCanvasElement;
+  private weightsPath = './weights';
   public video: HTMLVideoElement;
   public outputCanvas: HTMLCanvasElement;
 
@@ -37,19 +40,29 @@ export class Selfie implements ISelfie {
     this.video.setAttribute('playsinline', '');
     this.container.append(this.video);
     this.outputCanvas = document.createElement('canvas');
+    this.processingCanvas = document.createElement('canvas');
     this.container.append(this.outputCanvas);
     this.canvas = document.createElement('canvas');
     this.container = config.container;
+    this.weightsPath = config.weightsPath || this.weightsPath;
 
+    this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
     this.resize = this.resize.bind(this);
     this.play = this.play.bind(this);
   }
 
   updateCanvas() {
+    const outCtx = this.outputCanvas?.getContext('2d');
+    const processingCtx = this.processingCanvas?.getContext('2d');
     const updateCanvas = () => {
       const { width, height } = this.outputCanvas as HTMLCanvasElement;
-      this.outputCanvas.getContext('2d')?.drawImage(this.video, 0, 0, width, height);
+      processingCtx?.drawImage(this.video, 0, 0, width, height);
+      const frameData = processingCtx?.getImageData(0, 0, width, height);
+      if (frameData) {
+        const processedFrame = this.onFrameProcessedCallback(frameData.data);
+        outCtx?.putImageData(new ImageData(processedFrame, width, height), 0, 0);
+      }
       this.video.requestVideoFrameCallback(updateCanvas);
     };
     this.video.requestVideoFrameCallback(updateCanvas);
@@ -61,16 +74,22 @@ export class Selfie implements ISelfie {
     const scaleFactor =
       Math.min(this.container.offsetWidth || 0, this.container.offsetHeight || 0) /
       Math.min(videoWidth || 0, this.video?.videoHeight || 0);
-    if (!this.outputCanvas) {
+    if (!this.outputCanvas || !this.processingCanvas) {
       return;
     }
-    if (this.outputCanvas.style.width !== `${Math.round(videoWidth * scaleFactor)}px`) {
-      this.outputCanvas.style.width = `${Math.round(videoWidth * scaleFactor)}px`;
+    const newWidth = Math.round(videoWidth * scaleFactor);
+    const newHeight = Math.round(videoHeight * scaleFactor);
+    if (this.outputCanvas.style.width !== `${newWidth}px`) {
+      this.outputCanvas.style.width = `${newWidth}px`;
       this.outputCanvas.width = videoWidth;
+      this.processingCanvas.style.width = `${newWidth}px`;
+      this.processingCanvas.width = videoWidth;
     }
-    if (this.outputCanvas.style.height !== `${Math.round(videoHeight * scaleFactor)}px`) {
-      this.outputCanvas.style.height = `${Math.round(videoHeight * scaleFactor)}px`;
+    if (this.outputCanvas.style.height !== `${newHeight}px`) {
+      this.outputCanvas.style.height = `${newHeight}px`;
       this.outputCanvas.height = videoHeight;
+      this.processingCanvas.style.height = `${newHeight}px`;
+      this.processingCanvas.height = videoHeight;
     }
   }
 
@@ -85,8 +104,8 @@ export class Selfie implements ISelfie {
     video.addEventListener('play', this.play);
 
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri('./weights'),
-      faceapi.nets.faceLandmark68Net.loadFromUri('./weights'),
+      faceapi.nets.tinyFaceDetector.loadFromUri(this.weightsPath),
+      faceapi.nets.faceLandmark68Net.loadFromUri(this.weightsPath),
     ]);
 
     return navigator.mediaDevices
@@ -158,7 +177,7 @@ export class Selfie implements ISelfie {
 
           this.lastFaceFrame = roundFrame(getFaceFrame(resizedDetections[0]));
 
-          this.onFrameProcessedCallback({
+          this.onFaceFrameProcessedCallback({
             face,
             faceFrame: this.lastFaceFrame,
             detection: resizedDetections[0],
