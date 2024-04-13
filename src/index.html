@@ -6,7 +6,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C9PJ2CNH7X"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -160,6 +160,7 @@
     <script>
       var exports = {};
       document.addEventListener('DOMContentLoaded', async () => {
+        const { Selfie, Processors } = SimpleSelfie;
         const container = document.querySelector('.video-container');
         const captureButton = document.querySelector('.capture');
         const resultImageBlurred = document.querySelector('.result-image__blurred');
@@ -191,8 +192,7 @@
 
               const deviationFaceWidth = Math.abs(FACE_WIDTH - faceWidth);
               const deviationFacePosition = face.getFacePosiotion();
-              const overlayVisible =
-                deviationFaceWidth > FACE_DEVIATION || deviationFacePosition > FACE_DEVIATION * 2;
+              const overlayVisible = deviationFaceWidth > FACE_DEVIATION || deviationFacePosition > FACE_DEVIATION * 2;
               if (overlayVisible) {
                 overlay.classList.add('overlay_visible');
               } else {
@@ -223,12 +223,12 @@
           };
 
           const data = selfie.captureImage();
-          const image = await SelfieProcessors.toImage(frame, data);
-          const cropped = await SelfieProcessors.cropFrame(frame, lastFaceFrame, data);
-          const resized = await SelfieProcessors.resizeFrame(lastFaceFrame, faceFrame, cropped);
-          const laplacian = await SelfieProcessors.laplacian(faceFrame, resized);
-          const laplacianImage = await SelfieProcessors.toImage(faceFrame, laplacian);
-          const blurVarianceResult = await SelfieProcessors.variance(laplacian);
+          const image = await Processors.toImage(frame, data);
+          const cropped = await Processors.cropFrame(frame, lastFaceFrame, data);
+          const resized = await Processors.resizeFrame(lastFaceFrame, faceFrame, cropped);
+          const laplacian = await Processors.laplacian(faceFrame, resized);
+          const laplacianImage = await Processors.toImage(faceFrame, laplacian);
+          const blurVarianceResult = await Processors.variance(laplacian);
 
           resultImage.src = image;
           resultLaplacian.src = laplacianImage;
@@ -245,7 +245,7 @@
         });
 
         await selfie.start();
-        selfie.startProcessingLoop();
+        selfie.startFaceDetection();
 
         capturedImageModalClose.addEventListener('click', () => {
           capturedImageModal.close();

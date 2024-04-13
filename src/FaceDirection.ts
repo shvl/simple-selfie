@@ -1,19 +1,13 @@
-import { FaceLandmarks68 } from "face-api.js";
-import { getDistance } from "./utils/getDistance";
-
-interface IFaceDirection {
-  isLookStraight(): boolean;
-  isLookLeft(): boolean;
-  isLookRight(): boolean;
-  isLookUp(): boolean;
-}
+import { FaceLandmarks68 } from 'face-api.js';
+import { getDistance } from './utils/getDistance';
+import { FaceDirection as IFaceDirection } from './types/FaceDirection';
 
 export class FaceDirection implements IFaceDirection {
   private distanceLeft: number;
   private distanceTop: number;
 
   constructor(landmarks: FaceLandmarks68) {
-  // @ts-ignore
+    // @ts-ignore
     const landmarksPositions = landmarks._positions;
     const left = landmarksPositions[3];
     const right = landmarksPositions[15];
@@ -23,7 +17,7 @@ export class FaceDirection implements IFaceDirection {
     const faceWidth = getDistance(left, right);
     const faceHeight = getDistance(betweenEyes, bottom);
     this.distanceLeft = getDistance(left, nose) / faceWidth;
-    this.distanceTop = getDistance(betweenEyes, nose) / faceHeight;    
+    this.distanceTop = getDistance(betweenEyes, nose) / faceHeight;
   }
 
   isLookStraight() {

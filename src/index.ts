@@ -1,14 +1,12 @@
-import { Selfie } from './Selfie';
-import * as Processors from './processors';
-import * as Pipeline from './pipeline';
+import { Selfie as SelfieModule } from './Selfie';
+import * as ProcessorsModule from './processors';
+import * as TypesModule from './types';
 
-export { Selfie, Processors, Pipeline };
+export const Selfie = SelfieModule;
+export const Processors = ProcessorsModule;
+export const Types = TypesModule;
 
-if (window) {
-  // @ts-ignore
-  window.Selfie = Selfie;
-  // @ts-ignore
-  window.SelfieProcessors = Processors;
-  // @ts-ignore
-  window.SelfiePipeline = Pipeline;
-}
+export default { Selfie, Processors, Types };
+
+// @ts-ignore
+window?.SimpleSelfie = { Selfie, Processors, Types };

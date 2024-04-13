@@ -6,5 +6,5 @@ export type SelfieConfig = {
   overlay?: HTMLElement;
   frame?: Size;
   debug?: boolean;
-  onFrameProcessed?: (parameters: ProcessedFrame) => void;
+  onFrameProcessed?: (frame: ProcessedFrame) => void;
 };

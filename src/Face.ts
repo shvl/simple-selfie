@@ -1,10 +1,9 @@
 import { FaceLandmarks68 } from 'face-api.js';
 import { getDistance } from './utils/getDistance';
 import { FaceDirection } from './FaceDirection';
-import { Size } from './types/Size';
-import { Point } from './types/Point';
+import { Size, Point, Face as IFace } from './types';
 
-export class Face {
+export class Face implements IFace {
   direction: FaceDirection;
   private frame: Size;
   private left: Point;

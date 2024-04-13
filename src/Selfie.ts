@@ -1,6 +1,6 @@
 import * as faceapi from 'face-api.js';
 import { SelfieConfig } from './types/SelfieConfig';
-import { Frame } from './types/Frame';
+import { Frame, Selfie as ISelfie, ProcessedFrame} from './types';
 import { Face } from './Face';
 import { getFaceFrame } from './utils/getFaceFrame';
 
@@ -11,17 +11,19 @@ const roundFrame = (frame: Frame) => ({
   height: Math.round(frame.height),
 });
 
-export class Selfie {
+export class Selfie implements ISelfie {
   private frame = {
     width: 720,
     height: 560,
   };
   private debug = false;
   private lastFaceFrame: Frame = {} as Frame;
-  private onFrameProcessedCallback = (() => {}) as (processedFrame: any) => void;
+  private onFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
   private canvas: HTMLCanvasElement;
   private isPlayStarted = false;
   private container: HTMLElement;
+  private isStoped = false;
+  private isFaceDetectionStarted = false;
   public video: HTMLVideoElement;
   public outputCanvas: HTMLCanvasElement;
 
@@ -40,6 +42,8 @@ export class Selfie {
     this.container = config.container;
 
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
+    this.resize = this.resize.bind(this);
+    this.play = this.play.bind(this);
   }
 
   updateCanvas() {
@@ -60,11 +64,11 @@ export class Selfie {
     if (!this.outputCanvas) {
       return;
     }
-    if (this.outputCanvas.style.width !== `${Math.round(videoWidth * scaleFactor)}px`){
+    if (this.outputCanvas.style.width !== `${Math.round(videoWidth * scaleFactor)}px`) {
       this.outputCanvas.style.width = `${Math.round(videoWidth * scaleFactor)}px`;
       this.outputCanvas.width = videoWidth;
     }
-    if (this.outputCanvas.style.height !== `${Math.round(videoHeight * scaleFactor)}px`){
+    if (this.outputCanvas.style.height !== `${Math.round(videoHeight * scaleFactor)}px`) {
       this.outputCanvas.style.height = `${Math.round(videoHeight * scaleFactor)}px`;
       this.outputCanvas.height = videoHeight;
     }
@@ -76,21 +80,9 @@ export class Selfie {
     video.style.height = `${this.frame.height}px`;
     video.style.position = 'absolute';
 
-    window.addEventListener('resize', this.resize.bind(this));
+    window.addEventListener('resize', this.resize);
 
-    video.addEventListener('play', async () => {
-      this.canvas.remove();
-      this.canvas = faceapi.createCanvasFromMedia(video);
-      this.canvas.style.position = 'absolute';
-      video.style.opacity = '0';
-      this.container.append(this.canvas);
-      this.resize();
-
-      const displaySize = { width: video.width, height: video.height };
-      faceapi.matchDimensions(this.canvas, displaySize);
-      this.updateCanvas();
-      this.isPlayStarted = true;
-    });
+    video.addEventListener('play', this.play);
 
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('./weights'),
@@ -114,14 +106,39 @@ export class Selfie {
       });
   }
 
-  async startProcessingLoop() {
+  play() {
+    if (this.isStoped) {
+      return;
+    }
+    this.canvas.remove();
+    this.canvas = faceapi.createCanvasFromMedia(this.video);
+    this.canvas.style.position = 'absolute';
+    this.video.style.opacity = '0';
+    this.container.append(this.canvas);
+    this.resize();
+
+    const displaySize = { width: this.video.width, height: this.video.height };
+    faceapi.matchDimensions(this.canvas, displaySize);
+    this.updateCanvas();
+    this.isPlayStarted = true;
+  }
+
+  async startFaceDetection() {
     const { video } = this;
+    this.isFaceDetectionStarted = true;
+
     while (!this.isPlayStarted) {
       await new Promise((resolve) => setTimeout(resolve, 100));
+      if (this.isStoped || !this.isFaceDetectionStarted) {
+        return;
+      }
     }
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       try {
+        if (this.isStoped || !this.isFaceDetectionStarted) {
+          return;
+        }
         const detections = await faceapi
           .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks();
@@ -145,12 +162,16 @@ export class Selfie {
             face,
             faceFrame: this.lastFaceFrame,
             detection: resizedDetections[0],
-          });
+          } );
         }
       } catch (e) {
         console.error(e);
       }
     }
+  }
+
+  async stopFaceDetection() {
+    this.isFaceDetectionStarted = false;
   }
 
   captureImage(): Uint8ClampedArray {
@@ -163,5 +184,13 @@ export class Selfie {
 
     const inputData = frame?.data;
     return inputData || new Uint8ClampedArray();
+  }
+
+  stop() {
+    this.isStoped = true;
+    this.video.remove();
+    this.canvas.remove();
+    this.outputCanvas.remove();
+    window.removeEventListener('resize', this.resize);
   }
 }
