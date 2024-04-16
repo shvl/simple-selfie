@@ -1,4 +1,4 @@
-import { FaceLandmarks68 } from 'face-api.js';
+import { FaceLandmarks68 } from 'simple-selfie-face-api';
 import { getDistance } from './utils/getDistance';
 import { FaceDirection } from './FaceDirection';
 import { Size, Point, Face as IFace } from './types';

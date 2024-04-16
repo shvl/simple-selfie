@@ -1,4 +1,4 @@
-import * as faceapi from 'face-api.js';
+import * as faceapi from 'simple-selfie-face-api';
 import { Frame } from './Frame';
 import { Face } from '../Face';
 

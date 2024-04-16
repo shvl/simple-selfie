@@ -1,4 +1,4 @@
-import { FaceDetection, WithFaceLandmarks } from "face-api.js";
+import { FaceDetection, WithFaceLandmarks } from "simple-selfie-face-api";
 import { Frame } from "../types/Frame";
 
 export const getFaceFrame = (resizedDetections: WithFaceLandmarks<{ detection: FaceDetection; }>): Frame => {
