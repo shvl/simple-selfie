@@ -6,7 +6,6 @@ export type SelfieConfig = {
   overlay?: HTMLElement;
   frame?: Size;
   debug?: boolean;
-  weightsPath?: string;
   onFaceFrameProcessed?: (frame: ProcessedFrame) => void;
   onFrameProcessed?: (frameData: Uint8ClampedArray) => Uint8ClampedArray;
 };

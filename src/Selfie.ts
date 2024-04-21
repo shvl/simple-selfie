@@ -3,6 +3,7 @@ import { SelfieConfig } from './types/SelfieConfig';
 import { Frame, Selfie as ISelfie, ProcessedFrame} from './types';
 import { Face } from './Face';
 import { getFaceFrame } from './utils/getFaceFrame';
+import * as models from './models';
 
 const roundFrame = (frame: Frame) => ({
   x: Math.round(frame.x),
@@ -26,7 +27,6 @@ export class Selfie implements ISelfie {
   private isStoped = false;
   private isFaceDetectionStarted = false;
   private processingCanvas: HTMLCanvasElement;
-  private weightsPath = './weights';
   public video: HTMLVideoElement;
   public outputCanvas: HTMLCanvasElement;
 
@@ -44,8 +44,7 @@ export class Selfie implements ISelfie {
     this.container.append(this.outputCanvas);
     this.canvas = document.createElement('canvas');
     this.container = config.container;
-    this.weightsPath = config.weightsPath || this.weightsPath;
-
+    
     this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
     this.resize = this.resize.bind(this);
@@ -104,8 +103,8 @@ export class Selfie implements ISelfie {
     video.addEventListener('play', this.play);
 
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(this.weightsPath),
-      faceapi.nets.faceLandmark68Net.loadFromUri(this.weightsPath),
+      faceapi.nets.tinyFaceDetector.loadFromBuffer(models.manifest.tinyFaceDetector, models.fileToModel),
+      faceapi.nets.faceLandmark68Net.loadFromBuffer(models.manifest.faceLandmark68Net, models.fileToModel),
     ]);
 
     return navigator.mediaDevices
