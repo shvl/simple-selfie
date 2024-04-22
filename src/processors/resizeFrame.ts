@@ -1,7 +1,7 @@
 import { Frame } from '../types/Frame';
 
 
-function resizeFrame(originalFrame: Frame, newFrame: Frame, data: Uint8ClampedArray): Uint8ClampedArray {
+async function resizeFrame(originalFrame: Frame, newFrame: Frame, data: Uint8ClampedArray): Promise<Uint8ClampedArray> {
   const newData = new Uint8ClampedArray(newFrame.width * newFrame.height * 4);
 
   const scaleX = originalFrame.width / newFrame.width;

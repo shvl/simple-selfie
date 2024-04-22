@@ -1,9 +1,10 @@
 import * as faceapi from 'simple-selfie-face-api';
 import { SelfieConfig } from './types/SelfieConfig';
-import { Frame, Selfie as ISelfie, ProcessedFrame} from './types';
+import { Frame, Selfie as ISelfie, ProcessedFrame } from './types';
 import { Face } from './Face';
 import { getFaceFrame } from './utils/getFaceFrame';
 import * as models from './models';
+import { setCanvasSize } from './utils/setCanvasSize';
 
 const roundFrame = (frame: Frame) => ({
   x: Math.round(frame.x),
@@ -21,7 +22,7 @@ export class Selfie implements ISelfie {
   private lastFaceFrame: Frame = {} as Frame;
   private onFaceFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
   private onFrameProcessedCallback: (frameData: Uint8ClampedArray) => Uint8ClampedArray = (frameData) => frameData;
-  private canvas: HTMLCanvasElement;
+  private debugCanvas: HTMLCanvasElement;
   private isPlayStarted = false;
   private container: HTMLElement;
   private isStoped = false;
@@ -31,7 +32,7 @@ export class Selfie implements ISelfie {
   public outputCanvas: HTMLCanvasElement;
 
   constructor(config: SelfieConfig) {
-    this.debug = config.debug || window.location.search.includes('selfie-debug') || false;
+    this.debug = config.debug || false;
     this.frame = config.frame || this.frame;
     this.container = config.container;
     this.video = document.createElement('video');
@@ -42,9 +43,9 @@ export class Selfie implements ISelfie {
     this.outputCanvas = document.createElement('canvas');
     this.processingCanvas = document.createElement('canvas');
     this.container.append(this.outputCanvas);
-    this.canvas = document.createElement('canvas');
+    this.debugCanvas = document.createElement('canvas');
     this.container = config.container;
-    
+
     this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
     this.resize = this.resize.bind(this);
@@ -73,23 +74,11 @@ export class Selfie implements ISelfie {
     const scaleFactor =
       Math.min(this.container.offsetWidth || 0, this.container.offsetHeight || 0) /
       Math.min(videoWidth || 0, this.video?.videoHeight || 0);
-    if (!this.outputCanvas || !this.processingCanvas) {
-      return;
-    }
     const newWidth = Math.round(videoWidth * scaleFactor);
     const newHeight = Math.round(videoHeight * scaleFactor);
-    if (this.outputCanvas.style.width !== `${newWidth}px`) {
-      this.outputCanvas.style.width = `${newWidth}px`;
-      this.outputCanvas.width = videoWidth;
-      this.processingCanvas.style.width = `${newWidth}px`;
-      this.processingCanvas.width = videoWidth;
-    }
-    if (this.outputCanvas.style.height !== `${newHeight}px`) {
-      this.outputCanvas.style.height = `${newHeight}px`;
-      this.outputCanvas.height = videoHeight;
-      this.processingCanvas.style.height = `${newHeight}px`;
-      this.processingCanvas.height = videoHeight;
-    }
+    setCanvasSize(this.outputCanvas, newWidth, newHeight);
+    setCanvasSize(this.processingCanvas, newWidth, newHeight);
+    setCanvasSize(this.debugCanvas, newWidth, newHeight);
   }
 
   async start() {
@@ -99,7 +88,6 @@ export class Selfie implements ISelfie {
     video.style.position = 'absolute';
 
     window.addEventListener('resize', this.resize);
-
     video.addEventListener('play', this.play);
 
     await Promise.all([
@@ -128,15 +116,16 @@ export class Selfie implements ISelfie {
     if (this.isStoped) {
       return;
     }
-    this.canvas.remove();
-    this.canvas = faceapi.createCanvasFromMedia(this.video);
-    this.canvas.style.position = 'absolute';
+    this.debugCanvas.remove();
+    this.debugCanvas = faceapi.createCanvasFromMedia(this.video);
+    this.debugCanvas.style.position = 'absolute';
     this.video.style.opacity = '0';
-    this.container.append(this.canvas);
+    this.container.append(this.debugCanvas);
     this.resize();
 
     const displaySize = { width: this.video.width, height: this.video.height };
-    faceapi.matchDimensions(this.canvas, displaySize);
+    faceapi.matchDimensions(this.debugCanvas, displaySize);
+    this.resize();
     this.updateCanvas();
     this.isPlayStarted = true;
   }
@@ -168,10 +157,10 @@ export class Selfie implements ISelfie {
         if (detections.length > 0) {
           const face = new Face(detections[0].landmarks, frame);
 
-          this.canvas.getContext('2d')?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.debugCanvas.getContext('2d')?.clearRect(0, 0, this.debugCanvas.width, this.debugCanvas.height);
 
-          if (this.debug && this.canvas) {
-            faceapi.draw.drawFaceLandmarks(this.canvas, resizedDetections);
+          if (this.debug && this.debugCanvas) {
+            faceapi.draw.drawFaceLandmarks(this.debugCanvas, resizedDetections);
           }
 
           this.lastFaceFrame = roundFrame(getFaceFrame(resizedDetections[0]));
@@ -180,7 +169,7 @@ export class Selfie implements ISelfie {
             face,
             faceFrame: this.lastFaceFrame,
             detection: resizedDetections[0],
-          } );
+          });
         }
       } catch (e) {
         console.error(e);
@@ -207,7 +196,7 @@ export class Selfie implements ISelfie {
   stop() {
     this.isStoped = true;
     this.video.remove();
-    this.canvas.remove();
+    this.debugCanvas.remove();
     this.outputCanvas.remove();
     window.removeEventListener('resize', this.resize);
   }

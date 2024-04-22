@@ -1,6 +1,6 @@
 import { Frame } from '../types/Frame';
 
-function toImage(frame: Frame, data: Uint8ClampedArray): string {
+async function toImage(frame: Frame, data: Uint8ClampedArray): Promise<string> {
   const canvas = document.createElement('canvas');
   canvas.width = frame.width;
   canvas.height = frame.height;

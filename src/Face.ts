@@ -11,6 +11,11 @@ export class Face implements IFace {
   private nose: Point;
   private bottom: Point;
   private betweenEyes: Point;
+  private leftBrow: Point;
+  private rightBrow: Point;
+  private leftEye: Point;
+  private rightEye: Point;
+  
 
   constructor(landmarks: FaceLandmarks68, frame: Size) {
     // @ts-ignore
@@ -20,6 +25,10 @@ export class Face implements IFace {
     this.nose = landmarksPositions[33];
     this.bottom = landmarksPositions[9];
     this.betweenEyes = landmarksPositions[28];
+    this.leftBrow = landmarksPositions[17];
+    this.rightBrow = landmarksPositions[26];
+    this.leftEye = landmarksPositions[36];
+    this.rightEye = landmarksPositions[45];
     this.direction = new FaceDirection(landmarks);
     this.frame = frame;
   }
@@ -36,5 +45,18 @@ export class Face implements IFace {
 
   getHeight() {
     return getDistance(this.betweenEyes, this.bottom);
+  }
+
+  getEyesFrame() {
+    const fromBrowsToEyes = Math.max(
+      Math.abs(this.leftBrow.y - this.leftEye.y),
+      Math.abs(this.rightBrow.y - this.rightEye.y)
+    )
+    return {
+      x: Math.floor(this.leftBrow.x),
+      y: Math.floor(Math.min(this.leftBrow.y, this.rightBrow.y)),
+      width: Math.ceil(Math.abs(this.leftBrow.x - this.rightBrow.x)),
+      height: Math.ceil(fromBrowsToEyes * 2),
+    };
   }
 }

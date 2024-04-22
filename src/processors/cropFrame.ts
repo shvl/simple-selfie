@@ -1,6 +1,6 @@
 import { Frame } from '../types/Frame';
 
-function cropFrame(originalFrame: Frame, frame: Frame, data: Uint8ClampedArray): Uint8ClampedArray {
+async function cropFrame(originalFrame: Frame, frame: Frame, data: Uint8ClampedArray): Promise<Uint8ClampedArray> {
   const result = new Uint8ClampedArray(frame.width * frame.height * 4);
 
   let { width, height, x, y } = frame;

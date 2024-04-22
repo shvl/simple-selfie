@@ -1,4 +1,4 @@
-function calculateVariance(data: Uint8ClampedArray): number {
+async function calculateVariance(data: Uint8ClampedArray): Promise<number> {
   const d = new Uint8ClampedArray(data.length / 4);
   for (let i = 0; i < data.length; i += 4) {
     d[i / 4] = data[i];

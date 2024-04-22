@@ -179,13 +179,16 @@
         };
 
         let lastFaceFrame = null;
+        let lastEyesFrame = null;
         const FACE_WIDTH = 170;
         const FACE_DEVIATION = 45;
 
         const selfie = new Selfie({
+          debug: window.location.search.includes('selfie-debug'),
           container,
           onFaceFrameProcessed: ({ face, faceFrame, overlayVisible, detection }) => {
             lastFaceFrame = faceFrame;
+            lastEyesFrame = face.getEyesFrame();
 
             if (face) {
               const faceWidth = face.getWidth();
@@ -219,13 +222,13 @@
           };
           const faceFrame = {
             width: 200,
-            height: 200,
+            height: 100,
           };
 
           const data = selfie.captureImage();
           const image = await Processors.toImage(frame, data);
-          const cropped = await Processors.cropFrame(frame, lastFaceFrame, data);
-          const resized = await Processors.resizeFrame(lastFaceFrame, faceFrame, cropped);
+          const cropped = await Processors.cropFrame(frame, lastEyesFrame, data);
+          const resized = await Processors.resizeFrame(lastEyesFrame, faceFrame, cropped);
           const laplacian = await Processors.laplacian(faceFrame, resized);
           const laplacianImage = await Processors.toImage(faceFrame, laplacian);
           const blurVarianceResult = await Processors.variance(laplacian);
@@ -234,7 +237,7 @@
           resultLaplacian.src = laplacianImage;
 
           resultImageBlurred.textContent = 'Not blurred ' + Math.round(blurVarianceResult);
-          if (blurVarianceResult < 1100) {
+          if (blurVarianceResult < 125) {
             resultImageBlurred.classList.add('result-image__blurred_blurred');
             resultImageBlurred.textContent = 'Blurred ' + blurVarianceResult;
           } else {
