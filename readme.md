@@ -2,7 +2,7 @@
 
 Vanilla JS Demo: [https://shvl.github.io/simple-selfie](https://shvl.github.io/simple-selfie)
 
-Vanilla JS Demo AR (add glasses): [https://shvl.github.io/simple-selfie](https://shvl.github.io/simple-selfie?selfie-glasses)
+Vanilla JS Demo AR (add glasses): [https://shvl.github.io/simple-selfie?selfie-glasses](https://shvl.github.io/simple-selfie?selfie-glasses)
 
 React Demo: [https://github.com/shvl/react-simple-selfie](https://github.com/shvl/react-simple-selfie)
 
