@@ -178,14 +178,48 @@
           isLookLeft: document.querySelector('.face-position__direction_right'), //mirroring because of the camera
         };
 
+        const glassesImage = new Image();
+        glassesImage.src =
+          'data:image/svg+xml,%3Csvg height="512px" id="Layer_1" style="enable-background:new 0 0 512 512;" version="1.1" viewBox="0 0 512 512" width="512px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"%3E%3Cpath d="M465.4,247c-2.2-22-12.4-43-28.9-58.4c-17.1-15.9-39.3-24.7-62.7-24.7c-41.5,0-77.3,27.4-88.5,67c-7-7-18.5-11.7-29.3-11.7 c-10.8,0-22.3,4.7-29.3,11.7c-11.2-39.6-47-67-88.5-67c-23.3,0-45.6,8.7-62.7,24.6C59,204,48.8,225,46.6,247H32v18h14.6 c2.2,22,12.4,43,28.9,58.4c17.1,15.9,39.3,24.7,62.7,24.7c50.8,0,92.1-41.2,92.1-92c0-0.1,0-0.1,0-0.1h0c0-9.9,11.5-21.6,25.7-21.6 s25.7,11.7,25.7,21.6h0c0,0,0,0,0,0.1c0,50.8,41.3,92,92.1,92c23.3,0,45.6-8.7,62.7-24.7c16.5-15.4,26.7-36.5,28.9-58.5H480v-18 H465.4z M373.8,333c-42.5,0-77-34.6-77-77c0-42.5,34.6-77,77-77c42.5,0,77,34.6,77,77C450.8,298.5,416.3,333,373.8,333z M138.2,333 c-42.5,0-77-34.6-77-77c0-42.5,34.6-77,77-77c42.5,0,77,34.6,77,77C215.2,298.5,180.7,333,138.2,333z"/%3E%3C/svg%3E';
+        await new Promise((resolve) => {
+          glassesImage.onload = resolve;
+        });
+
         let lastFaceFrame = null;
         let lastEyesFrame = null;
         const FACE_WIDTH = 170;
         const FACE_DEVIATION = 45;
+        const debug = window.location.search.includes('selfie-debug');
+        const showGlasses = window.location.search.includes('selfie-glasses');
 
         const selfie = new Selfie({
-          debug: window.location.search.includes('selfie-debug'),
+          debug,
           container,
+          onFrameProcessed: (ctx, face) => {
+            if (!showGlasses) {
+              return;
+            }
+            if (!face) {
+              return;
+            }
+            const betweenEyes = face.getBetweenEyes();
+            const faceWidth = face.getWidth() * 1.2;
+            const rotation = face.direction.getRotation();
+            const scaleFactor = faceWidth / glassesImage.width;
+            const height = glassesImage.height * scaleFactor;
+            const width = glassesImage.width * scaleFactor;
+            const x = betweenEyes.x - width / 2;
+            const y = betweenEyes.y - height / 2;
+
+            ctx.save();
+            ctx.setTransform(
+              new DOMMatrix()
+                .translateSelf(betweenEyes.x, betweenEyes.y)
+                .rotateSelf(rotation.x, rotation.y, rotation.z)
+            );
+            ctx.drawImage(glassesImage, -width / 2, -height / 2, width, height);            
+            ctx.restore();
+          },
           onFaceFrameProcessed: ({ face, faceFrame, overlayVisible, detection }) => {
             lastFaceFrame = faceFrame;
             lastEyesFrame = face.getEyesFrame();

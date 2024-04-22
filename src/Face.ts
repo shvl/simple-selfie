@@ -24,7 +24,7 @@ export class Face implements IFace {
     this.right = landmarksPositions[15];
     this.nose = landmarksPositions[33];
     this.bottom = landmarksPositions[9];
-    this.betweenEyes = landmarksPositions[28];
+    this.betweenEyes = landmarksPositions[27];
     this.leftBrow = landmarksPositions[17];
     this.rightBrow = landmarksPositions[26];
     this.leftEye = landmarksPositions[36];
@@ -57,6 +57,13 @@ export class Face implements IFace {
       y: Math.floor(Math.min(this.leftBrow.y, this.rightBrow.y)),
       width: Math.ceil(Math.abs(this.leftBrow.x - this.rightBrow.x)),
       height: Math.ceil(fromBrowsToEyes * 2),
+    };
+  }
+
+  getBetweenEyes(): Point {
+    return {
+      x: Math.round(this.betweenEyes.x),
+      y: Math.round(this.betweenEyes.y),
     };
   }
 }

@@ -6,6 +6,7 @@ export type SelfieConfig = {
   overlay?: HTMLElement;
   frame?: Size;
   debug?: boolean;
+  faceDetectionInterval?: number;
   onFaceFrameProcessed?: (frame: ProcessedFrame) => void;
-  onFrameProcessed?: (frameData: Uint8ClampedArray) => Uint8ClampedArray;
+  onFrameProcessed?: (ctx: CanvasRenderingContext2D | null) => void;
 };

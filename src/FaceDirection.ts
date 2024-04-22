@@ -4,7 +4,10 @@ import { FaceDirection as IFaceDirection } from './types/FaceDirection';
 
 export class FaceDirection implements IFaceDirection {
   private distanceLeft: number;
-  private distanceTop: number;
+  private distanceBottom: number;
+  private angleY: number;
+  private angleX: number;
+  private angleZ: number;
 
   constructor(landmarks: FaceLandmarks68) {
     // @ts-ignore
@@ -13,30 +16,49 @@ export class FaceDirection implements IFaceDirection {
     const right = landmarksPositions[15];
     const nose = landmarksPositions[33];
     const bottom = landmarksPositions[9];
-    const betweenEyes = landmarksPositions[28];
+    const leftBrow = landmarksPositions[17];
+    const rightBrow = landmarksPositions[26];
+
+    const top = {
+      x: (leftBrow.x + rightBrow.x) / 2,
+      y: Math.min(leftBrow.y, rightBrow.y),
+    };
+
     const faceWidth = getDistance(left, right);
-    const faceHeight = getDistance(betweenEyes, bottom);
+    const faceHeight = getDistance(top, bottom);
     this.distanceLeft = getDistance(left, nose) / faceWidth;
-    this.distanceTop = getDistance(betweenEyes, nose) / faceHeight;
+    this.distanceBottom = getDistance(bottom, nose) / faceHeight;
+    this.angleY = (this.distanceLeft - 0.5) * 180;
+    this.angleX = (this.distanceBottom - 0.5) * 180;
+    const verticalDistance = leftBrow.y - rightBrow.y;
+    this.angleZ = - Math.asin(verticalDistance / faceWidth) * 180 / Math.PI;
   }
 
-  isLookStraight() {
-    return this.distanceLeft > 0.4 && this.distanceLeft < 0.7 && this.distanceTop > 0.32 && this.distanceTop < 0.4;
+  isLookStraight(): boolean {
+    return !this.isLookLeft() && !this.isLookRight() && !this.isLookUp() && !this.isLookDown();
   }
 
-  isLookLeft() {
-    return this.distanceLeft > 0.7;
+  isLookLeft(): boolean {
+    return this.angleY > 20;
   }
 
-  isLookRight() {
-    return this.distanceLeft < 0.4;
+  isLookRight(): boolean {
+    return this.angleY < -20;
   }
 
-  isLookUp() {
-    return this.distanceTop < 0.32;
+  isLookUp(): boolean {
+    return this.angleX > 20;
   }
 
-  isLookDown() {
-    return this.distanceTop > 0.4;
+  isLookDown(): boolean {
+    return this.angleX < -20;
+  }
+
+  getRotation() {
+    return {
+      x: this.angleX,
+      y: this.angleY,
+      z: this.angleZ,
+    };
   }
 }

@@ -21,13 +21,15 @@ export class Selfie implements ISelfie {
   private debug = false;
   private lastFaceFrame: Frame = {} as Frame;
   private onFaceFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
-  private onFrameProcessedCallback: (frameData: Uint8ClampedArray) => Uint8ClampedArray = (frameData) => frameData;
+  private onFrameProcessedCallback: (frameData: CanvasRenderingContext2D | null, face: Face | null) => void = () => null;
   private debugCanvas: HTMLCanvasElement;
   private isPlayStarted = false;
   private container: HTMLElement;
   private isStoped = false;
   private isFaceDetectionStarted = false;
   private processingCanvas: HTMLCanvasElement;
+  private faceDetectionInterval = 100;
+  private lastface: Face | null = null;
   public video: HTMLVideoElement;
   public outputCanvas: HTMLCanvasElement;
 
@@ -45,6 +47,7 @@ export class Selfie implements ISelfie {
     this.container.append(this.outputCanvas);
     this.debugCanvas = document.createElement('canvas');
     this.container = config.container;
+    this.faceDetectionInterval = config.faceDetectionInterval || this.faceDetectionInterval;
 
     this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
@@ -58,10 +61,10 @@ export class Selfie implements ISelfie {
     const updateCanvas = () => {
       const { width, height } = this.outputCanvas as HTMLCanvasElement;
       processingCtx?.drawImage(this.video, 0, 0, width, height);
+      this.onFrameProcessedCallback(processingCtx, this.lastface);
       const frameData = processingCtx?.getImageData(0, 0, width, height);
       if (frameData) {
-        const processedFrame = this.onFrameProcessedCallback(frameData.data);
-        outCtx?.putImageData(new ImageData(processedFrame, width, height), 0, 0);
+        outCtx?.putImageData(new ImageData(frameData.data, width, height), 0, 0);
       }
       this.video.requestVideoFrameCallback(updateCanvas);
     };
@@ -141,7 +144,7 @@ export class Selfie implements ISelfie {
       }
     }
     while (true) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, this.faceDetectionInterval));
       try {
         if (this.isStoped || !this.isFaceDetectionStarted) {
           return;
@@ -164,6 +167,7 @@ export class Selfie implements ISelfie {
           }
 
           this.lastFaceFrame = roundFrame(getFaceFrame(resizedDetections[0]));
+          this.lastface = face;
 
           this.onFaceFrameProcessedCallback({
             face,

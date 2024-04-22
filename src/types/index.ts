@@ -3,6 +3,7 @@ export { FaceDirection } from './FaceDirection';
 export { Frame } from './Frame';
 export { Point } from './Point';
 export { ProcessedFrame } from './ProcessedFrame';
+export { Rotation } from './Rotation';
 export { SelfieConfig } from './SelfieConfig';
 export { Size } from './Size';
 export { Selfie } from './Selfie';
