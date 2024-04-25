@@ -9,7 +9,7 @@
     "dev": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "build-package": "tsc",
-    "publish-package": "npm run build-package && npm i && npm publish",
+    "publish-package": "npm run build && npm i && npm publish",
     "deploy": "gh-pages -d dist"
   },
   "keywords": [
