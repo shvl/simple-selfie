@@ -11,7 +11,6 @@ export declare class Selfie implements ISelfie {
     private container;
     private isStoped;
     private isFaceDetectionStarted;
-    private processingCanvas;
     private faceDetectionInterval;
     private lastface;
     video: HTMLVideoElement;

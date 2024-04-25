@@ -69,7 +69,6 @@ var Selfie = /** @class */ (function () {
         this.video.setAttribute('playsinline', '');
         this.container.append(this.video);
         this.outputCanvas = document.createElement('canvas');
-        this.processingCanvas = document.createElement('canvas');
         this.container.append(this.outputCanvas);
         this.debugCanvas = document.createElement('canvas');
         this.container = config.container;
@@ -81,14 +80,13 @@ var Selfie = /** @class */ (function () {
     }
     Selfie.prototype.updateCanvas = function () {
         var _this = this;
-        var _a, _b;
+        var _a;
         var outCtx = (_a = this.outputCanvas) === null || _a === void 0 ? void 0 : _a.getContext('2d');
-        var processingCtx = (_b = this.processingCanvas) === null || _b === void 0 ? void 0 : _b.getContext('2d');
         var updateCanvas = function () {
             var _a = _this.outputCanvas, width = _a.width, height = _a.height;
-            processingCtx === null || processingCtx === void 0 ? void 0 : processingCtx.drawImage(_this.video, 0, 0, width, height);
-            _this.onFrameProcessedCallback(processingCtx, _this.lastface);
-            var frameData = processingCtx === null || processingCtx === void 0 ? void 0 : processingCtx.getImageData(0, 0, width, height);
+            outCtx === null || outCtx === void 0 ? void 0 : outCtx.drawImage(_this.video, 0, 0, width, height);
+            _this.onFrameProcessedCallback(outCtx, _this.lastface);
+            var frameData = outCtx === null || outCtx === void 0 ? void 0 : outCtx.getImageData(0, 0, width, height);
             if (frameData) {
                 outCtx === null || outCtx === void 0 ? void 0 : outCtx.putImageData(new ImageData(frameData.data, width, height), 0, 0);
             }
@@ -104,9 +102,12 @@ var Selfie = /** @class */ (function () {
             Math.min(videoWidth || 0, ((_b = this.video) === null || _b === void 0 ? void 0 : _b.videoHeight) || 0);
         var newWidth = Math.round(videoWidth * scaleFactor);
         var newHeight = Math.round(videoHeight * scaleFactor);
+        this.outputCanvas.width = videoWidth;
+        this.outputCanvas.height = videoHeight;
         setCanvasSize(this.outputCanvas, newWidth, newHeight);
-        setCanvasSize(this.processingCanvas, newWidth, newHeight);
         setCanvasSize(this.debugCanvas, newWidth, newHeight);
+        var displaySize = { width: videoWidth, height: videoHeight };
+        faceapi.matchDimensions(this.debugCanvas, displaySize);
     };
     Selfie.prototype.start = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -155,9 +156,6 @@ var Selfie = /** @class */ (function () {
         this.video.style.opacity = '0';
         this.container.append(this.debugCanvas);
         this.resize();
-        var displaySize = { width: this.video.width, height: this.video.height };
-        faceapi.matchDimensions(this.debugCanvas, displaySize);
-        this.resize();
         this.updateCanvas();
         this.isPlayStarted = true;
     };
@@ -203,7 +201,7 @@ var Selfie = /** @class */ (function () {
                         };
                         resizedDetections = faceapi.resizeResults(detections, frame);
                         if (detections.length > 0) {
-                            face = new Face(detections[0].landmarks, frame);
+                            face = new Face(resizedDetections[0].landmarks, frame);
                             (_a = this.debugCanvas.getContext('2d')) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.debugCanvas.width, this.debugCanvas.height);
                             if (this.debug && this.debugCanvas) {
                                 faceapi.draw.drawFaceLandmarks(this.debugCanvas, resizedDetections);
