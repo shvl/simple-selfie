@@ -195,6 +195,7 @@
         const selfie = new Selfie({
           debug,
           container,
+          faceDetectionInterval: showGlasses ? 10 : 100,
           onFrameProcessed: (ctx, face) => {
             if (!showGlasses) {
               return;
