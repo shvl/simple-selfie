@@ -9,4 +9,5 @@ export type SelfieConfig = {
   faceDetectionInterval?: number;
   onFaceFrameProcessed?: (frame: ProcessedFrame) => void;
   onFrameProcessed?: (ctx: CanvasRenderingContext2D | null) => void;
+  onLoaded?: () => void;
 };

@@ -5,13 +5,7 @@ import { Face } from './Face';
 import { getFaceFrame } from './utils/getFaceFrame';
 import * as models from './models';
 import { setCanvasSize } from './utils/setCanvasSize';
-
-const roundFrame = (frame: Frame) => ({
-  x: Math.round(frame.x),
-  y: Math.round(frame.y),
-  width: Math.round(frame.width),
-  height: Math.round(frame.height),
-});
+import { roundFrame } from './utils';
 
 export class Selfie implements ISelfie {
   private frame = {
@@ -22,6 +16,7 @@ export class Selfie implements ISelfie {
   private lastFaceFrame: Frame = {} as Frame;
   private onFaceFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
   private onFrameProcessedCallback: (frameData: CanvasRenderingContext2D | null, face: Face | null) => void = () => null;
+  private onLoaded: () => void = () => {};
   private debugCanvas: HTMLCanvasElement;
   private isPlayStarted = false;
   private container: HTMLElement;
@@ -49,6 +44,7 @@ export class Selfie implements ISelfie {
 
     this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
+    this.onLoaded = config.onLoaded || this.onLoaded;
     this.resize = this.resize.bind(this);
     this.play = this.play.bind(this);
   }
@@ -131,6 +127,7 @@ export class Selfie implements ISelfie {
 
     this.updateCanvas();
     this.isPlayStarted = true;
+    this.onLoaded();
   }
 
   async startFaceDetection() {

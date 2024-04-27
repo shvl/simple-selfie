@@ -92,6 +92,31 @@
       .result-image__blurred_blurred {
         color: #ffcccc;
       }
+
+      .loader {
+        top: calc(50% - 24px);
+        left: calc(50% - 24px);
+        width: 48px;
+        height: 48px;
+        border: 5px solid #fff;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        position: absolute;
+        animation: rotation 1s linear infinite;
+      }
+
+      .loader_hidden {
+        display: none;
+      }
+
+      @keyframes rotation {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -126,6 +151,7 @@
               d="M 0.00584608,0.00584652 0.02172364,162.74865 26.054886,162.43965 c 0.0016,-0.0743 0.809408,-37.12886 11.412223,-44.95539 8.713852,-6.43218 16.471287,-5.57854 20.256645,-9.10022 2.447633,4.28588 13.09633,10.52297 23.374798,10.64483 10.27846,0.12186 20.978158,-5.80254 24.350968,-10.64483 4.43548,2.48387 16.2399,6.14727 21.1832,9.80354 8.2446,6.09803 10.63215,42.1306 10.62416,44.27223 -1.14753,-0.0148 -41.046528,0.009 -73.587753,0.0253 l 99.093713,0.28063 0.0687,-162.73064 z M 63.598847,162.43965 H 26.054886 c -2e-6,8e-5 -5.17e-4,0.0129 -5.17e-4,0.0129 0,0 20.941942,-0.005 37.544478,-0.0129 z M 82.832812,37.719105 c 6.78944,0.0412 26.987748,3.320287 28.386898,25.016044 C 113.33225,95.493013 97.710072,111.49774 81.704722,111.79623 65.699366,112.09473 50.429508,95.658536 51.420779,65.378399 52.252034,39.986184 76.043382,37.677903 82.832812,37.719105 Z"
             />
           </svg>
+          <div class="loader"></div>
         </div>
         <div>
           <button class="capture">Capture a picture</button>
@@ -188,7 +214,7 @@
         let lastFaceFrame = null;
         let lastEyesFrame = null;
         const FACE_WIDTH = 170;
-        const FACE_DEVIATION = 45;
+        const FACE_DEVIATION = 50;
         const debug = window.location.search.includes('selfie-debug');
         const showGlasses = window.location.search.includes('selfie-glasses');
 
@@ -214,11 +240,9 @@
 
             ctx.save();
             ctx.setTransform(
-              new DOMMatrix()
-                .translateSelf(betweenEyes.x, betweenEyes.y)
-                .rotateSelf(rotation.x, rotation.y, rotation.z)
+              new DOMMatrix().translateSelf(betweenEyes.x, betweenEyes.y).rotateSelf(rotation.x, rotation.y, rotation.z)
             );
-            ctx.drawImage(glassesImage, -width / 2, -height / 2, width, height);            
+            ctx.drawImage(glassesImage, -width / 2, -height / 2, width, height);
             ctx.restore();
           },
           onFaceFrameProcessed: ({ face, faceFrame, overlayVisible, detection }) => {
@@ -247,6 +271,9 @@
 
               captureButton.disabled = overlayVisible;
             }
+          },
+          onLoaded: () => {
+            document.querySelector('.loader').classList.add('loader_hidden');
           },
         });
 
