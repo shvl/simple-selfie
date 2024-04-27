@@ -6,6 +6,7 @@ export declare class Selfie implements ISelfie {
     private lastFaceFrame;
     private onFaceFrameProcessedCallback;
     private onFrameProcessedCallback;
+    private onLoaded;
     private debugCanvas;
     private isPlayStarted;
     private container;
