@@ -1,8 +1,9 @@
 import { FaceLandmarks68 } from 'simple-selfie-face-api';
 import { FaceDirection } from './FaceDirection';
-import { Size, Point, Face as IFace } from './types';
+import { Size, Point, Face as IFace, Frame } from './types';
 export declare class Face implements IFace {
     direction: FaceDirection;
+    private landmarks;
     private frame;
     private left;
     private right;
@@ -17,11 +18,8 @@ export declare class Face implements IFace {
     getFacePosiotion(): number;
     getWidth(): number;
     getHeight(): number;
-    getEyesFrame(): {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    };
+    getEyesFrame(): Frame;
+    getLeftEyeFrame(): Frame;
+    getRightEyeFrame(): Frame;
     getBetweenEyes(): Point;
 }

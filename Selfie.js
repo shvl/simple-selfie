@@ -39,12 +39,7 @@ import { Face } from './Face';
 import { getFaceFrame } from './utils/getFaceFrame';
 import * as models from './models';
 import { setCanvasSize } from './utils/setCanvasSize';
-var roundFrame = function (frame) { return ({
-    x: Math.round(frame.x),
-    y: Math.round(frame.y),
-    width: Math.round(frame.width),
-    height: Math.round(frame.height),
-}); };
+import { roundFrame } from './utils';
 var Selfie = /** @class */ (function () {
     function Selfie(config) {
         this.frame = {
@@ -55,6 +50,7 @@ var Selfie = /** @class */ (function () {
         this.lastFaceFrame = {};
         this.onFaceFrameProcessedCallback = function () { };
         this.onFrameProcessedCallback = function () { return null; };
+        this.onLoaded = function () { };
         this.isPlayStarted = false;
         this.isStoped = false;
         this.isFaceDetectionStarted = false;
@@ -75,6 +71,7 @@ var Selfie = /** @class */ (function () {
         this.faceDetectionInterval = config.faceDetectionInterval || this.faceDetectionInterval;
         this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
         this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
+        this.onLoaded = config.onLoaded || this.onLoaded;
         this.resize = this.resize.bind(this);
         this.play = this.play.bind(this);
     }
@@ -158,6 +155,7 @@ var Selfie = /** @class */ (function () {
         this.resize();
         this.updateCanvas();
         this.isPlayStarted = true;
+        this.onLoaded();
     };
     Selfie.prototype.startFaceDetection = function () {
         return __awaiter(this, void 0, void 0, function () {
