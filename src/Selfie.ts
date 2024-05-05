@@ -1,11 +1,11 @@
 import * as faceapi from 'simple-selfie-face-api';
 import { SelfieConfig } from './types/SelfieConfig';
-import { Frame, Selfie as ISelfie, ProcessedFrame } from './types';
+import { Selfie as ISelfie } from './types';
 import { Face } from './Face';
-import { getFaceFrame } from './utils/getFaceFrame';
 import * as models from './models';
 import { setCanvasSize } from './utils/setCanvasSize';
-import { roundFrame } from './utils';
+import { ProcessedFrame } from './ProcessedFrame';
+import { CapturedImage } from './CapturedImage';
 
 export class Selfie implements ISelfie {
   private frame = {
@@ -13,9 +13,9 @@ export class Selfie implements ISelfie {
     height: 560,
   };
   private debug = false;
-  private lastFaceFrame: Frame = {} as Frame;
   private onFaceFrameProcessedCallback: (processedFrame: ProcessedFrame) => void = () => {};
-  private onFrameProcessedCallback: (frameData: CanvasRenderingContext2D | null, face: Face | null) => void = () => null;
+  private onFrameProcessedCallback: (frameData: CanvasRenderingContext2D | null, face: Face | null) => void = () =>
+    null;
   private onLoaded: () => void = () => {};
   private debugCanvas: HTMLCanvasElement;
   private isPlayStarted = false;
@@ -130,8 +130,32 @@ export class Selfie implements ISelfie {
     this.onLoaded();
   }
 
+  async detectFace(): Promise<Face | null> {
+    const detections = await faceapi
+      .detectAllFaces(this.video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks();
+    const frame = {
+      width: this.video.videoWidth,
+      height: this.video.videoHeight,
+    };
+    const resizedDetections = faceapi.resizeResults(detections, frame);
+    if (detections.length > 0) {
+      const face = new Face(resizedDetections[0].landmarks, frame);
+
+      this.debugCanvas.getContext('2d')?.clearRect(0, 0, this.debugCanvas.width, this.debugCanvas.height);
+
+      if (this.debug && this.debugCanvas) {
+        faceapi.draw.drawFaceLandmarks(this.debugCanvas, resizedDetections);
+      }
+
+      this.lastface = face;
+
+      return face;
+    }
+    return null;
+  }
+
   async startFaceDetection() {
-    const { video } = this;
     this.isFaceDetectionStarted = true;
 
     while (!this.isPlayStarted) {
@@ -146,32 +170,13 @@ export class Selfie implements ISelfie {
         if (this.isStoped || !this.isFaceDetectionStarted) {
           return;
         }
-        const detections = await faceapi
-          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks();
-        const frame = {
-          width: video.videoWidth,
-          height: video.videoHeight,
-        };
-        const resizedDetections = faceapi.resizeResults(detections, frame);
-        if (detections.length > 0) {
-          const face = new Face(resizedDetections[0].landmarks, frame);
 
-          this.debugCanvas.getContext('2d')?.clearRect(0, 0, this.debugCanvas.width, this.debugCanvas.height);
-
-          if (this.debug && this.debugCanvas) {
-            faceapi.draw.drawFaceLandmarks(this.debugCanvas, resizedDetections);
-          }
-
-          this.lastFaceFrame = roundFrame(getFaceFrame(resizedDetections[0]));
-          this.lastface = face;
-
-          this.onFaceFrameProcessedCallback({
-            face,
-            faceFrame: this.lastFaceFrame,
-            detection: resizedDetections[0],
-          });
+        const face = await this.detectFace();
+        if (!face) {
+          continue;
         }
+
+        this.onFaceFrameProcessedCallback(new ProcessedFrame(face));
       } catch (e) {
         console.error(e);
       }
@@ -182,16 +187,17 @@ export class Selfie implements ISelfie {
     this.isFaceDetectionStarted = false;
   }
 
-  captureImage(): Uint8ClampedArray {
+  async captureImage(): Promise<CapturedImage> {
     if (!this.video) {
       throw new Error('Video not initialized');
     }
+    const face = await this.detectFace();
     const frame = this.outputCanvas
       ?.getContext('2d')
       ?.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight);
 
     const inputData = frame?.data;
-    return inputData || new Uint8ClampedArray();
+    return new CapturedImage(face, inputData);
   }
 
   stop() {

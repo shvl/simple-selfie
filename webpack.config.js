@@ -33,14 +33,6 @@ module.exports = {
       template: "./index.html",
       filename: "index.html",
     }),
-    new CopyPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, "./weights"),
-          to: path.resolve(__dirname, "./dist/weights"),
-        },
-      ],
-    }),
   ],
   devServer: {
     static: {
