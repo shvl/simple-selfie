@@ -1,9 +1,10 @@
 import { SelfieConfig } from './types/SelfieConfig';
 import { Selfie as ISelfie } from './types';
+import { Face } from './Face';
+import { CapturedImage } from './CapturedImage';
 export declare class Selfie implements ISelfie {
     private frame;
     private debug;
-    private lastFaceFrame;
     private onFaceFrameProcessedCallback;
     private onFrameProcessedCallback;
     private onLoaded;
@@ -21,8 +22,9 @@ export declare class Selfie implements ISelfie {
     resize(): void;
     start(): Promise<void>;
     play(): void;
+    detectFace(): Promise<Face | null>;
     startFaceDetection(): Promise<void>;
     stopFaceDetection(): Promise<void>;
-    captureImage(): Uint8ClampedArray;
+    captureImage(): Promise<CapturedImage>;
     stop(): void;
 }

@@ -36,10 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import * as faceapi from 'simple-selfie-face-api';
 import { Face } from './Face';
-import { getFaceFrame } from './utils/getFaceFrame';
 import * as models from './models';
 import { setCanvasSize } from './utils/setCanvasSize';
-import { roundFrame } from './utils';
+import { ProcessedFrame } from './ProcessedFrame';
+import { CapturedImage } from './CapturedImage';
 var Selfie = /** @class */ (function () {
     function Selfie(config) {
         this.frame = {
@@ -47,9 +47,10 @@ var Selfie = /** @class */ (function () {
             height: 560,
         };
         this.debug = false;
-        this.lastFaceFrame = {};
         this.onFaceFrameProcessedCallback = function () { };
-        this.onFrameProcessedCallback = function () { return null; };
+        this.onFrameProcessedCallback = function () {
+            return null;
+        };
         this.onLoaded = function () { };
         this.isPlayStarted = false;
         this.isStoped = false;
@@ -157,45 +158,20 @@ var Selfie = /** @class */ (function () {
         this.isPlayStarted = true;
         this.onLoaded();
     };
-    Selfie.prototype.startFaceDetection = function () {
+    Selfie.prototype.detectFace = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var video, detections, frame, resizedDetections, face, e_1;
-            var _this = this;
+            var detections, frame, resizedDetections, face;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0:
-                        video = this.video;
-                        this.isFaceDetectionStarted = true;
-                        _b.label = 1;
+                    case 0: return [4 /*yield*/, faceapi
+                            .detectAllFaces(this.video, new faceapi.TinyFaceDetectorOptions())
+                            .withFaceLandmarks()];
                     case 1:
-                        if (!!this.isPlayStarted) return [3 /*break*/, 3];
-                        return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 100); })];
-                    case 2:
-                        _b.sent();
-                        if (this.isStoped || !this.isFaceDetectionStarted) {
-                            return [2 /*return*/];
-                        }
-                        return [3 /*break*/, 1];
-                    case 3:
-                        if (!true) return [3 /*break*/, 9];
-                        return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, _this.faceDetectionInterval); })];
-                    case 4:
-                        _b.sent();
-                        _b.label = 5;
-                    case 5:
-                        _b.trys.push([5, 7, , 8]);
-                        if (this.isStoped || !this.isFaceDetectionStarted) {
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, faceapi
-                                .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-                                .withFaceLandmarks()];
-                    case 6:
                         detections = _b.sent();
                         frame = {
-                            width: video.videoWidth,
-                            height: video.videoHeight,
+                            width: this.video.videoWidth,
+                            height: this.video.videoHeight,
                         };
                         resizedDetections = faceapi.resizeResults(detections, frame);
                         if (detections.length > 0) {
@@ -204,17 +180,53 @@ var Selfie = /** @class */ (function () {
                             if (this.debug && this.debugCanvas) {
                                 faceapi.draw.drawFaceLandmarks(this.debugCanvas, resizedDetections);
                             }
-                            this.lastFaceFrame = roundFrame(getFaceFrame(resizedDetections[0]));
                             this.lastface = face;
-                            this.onFaceFrameProcessedCallback({
-                                face: face,
-                                faceFrame: this.lastFaceFrame,
-                                detection: resizedDetections[0],
-                            });
+                            return [2 /*return*/, face];
                         }
+                        return [2 /*return*/, null];
+                }
+            });
+        });
+    };
+    Selfie.prototype.startFaceDetection = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var face, e_1;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.isFaceDetectionStarted = true;
+                        _a.label = 1;
+                    case 1:
+                        if (!!this.isPlayStarted) return [3 /*break*/, 3];
+                        return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 100); })];
+                    case 2:
+                        _a.sent();
+                        if (this.isStoped || !this.isFaceDetectionStarted) {
+                            return [2 /*return*/];
+                        }
+                        return [3 /*break*/, 1];
+                    case 3:
+                        if (!true) return [3 /*break*/, 9];
+                        return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, _this.faceDetectionInterval); })];
+                    case 4:
+                        _a.sent();
+                        _a.label = 5;
+                    case 5:
+                        _a.trys.push([5, 7, , 8]);
+                        if (this.isStoped || !this.isFaceDetectionStarted) {
+                            return [2 /*return*/];
+                        }
+                        return [4 /*yield*/, this.detectFace()];
+                    case 6:
+                        face = _a.sent();
+                        if (!face) {
+                            return [3 /*break*/, 3];
+                        }
+                        this.onFaceFrameProcessedCallback(new ProcessedFrame(face));
                         return [3 /*break*/, 8];
                     case 7:
-                        e_1 = _b.sent();
+                        e_1 = _a.sent();
                         console.error(e_1);
                         return [3 /*break*/, 8];
                     case 8: return [3 /*break*/, 3];
@@ -232,13 +244,24 @@ var Selfie = /** @class */ (function () {
         });
     };
     Selfie.prototype.captureImage = function () {
-        var _a, _b;
-        if (!this.video) {
-            throw new Error('Video not initialized');
-        }
-        var frame = (_b = (_a = this.outputCanvas) === null || _a === void 0 ? void 0 : _a.getContext('2d')) === null || _b === void 0 ? void 0 : _b.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight);
-        var inputData = frame === null || frame === void 0 ? void 0 : frame.data;
-        return inputData || new Uint8ClampedArray();
+        return __awaiter(this, void 0, void 0, function () {
+            var face, frame, inputData;
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        if (!this.video) {
+                            throw new Error('Video not initialized');
+                        }
+                        return [4 /*yield*/, this.detectFace()];
+                    case 1:
+                        face = _c.sent();
+                        frame = (_b = (_a = this.outputCanvas) === null || _a === void 0 ? void 0 : _a.getContext('2d')) === null || _b === void 0 ? void 0 : _b.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight);
+                        inputData = frame === null || frame === void 0 ? void 0 : frame.data;
+                        return [2 /*return*/, new CapturedImage(face, inputData)];
+                }
+            });
+        });
     };
     Selfie.prototype.stop = function () {
         this.isStoped = true;

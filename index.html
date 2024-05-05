@@ -148,8 +148,6 @@
           glassesImage.onload = resolve;
         });
 
-        let lastFaceFrame = null;
-        let lastFace = null;
         const FACE_WIDTH = 170;
         const FACE_DEVIATION = 25;
         const debug = window.location.search.includes('selfie-debug');
@@ -182,31 +180,29 @@
             ctx.drawImage(glassesImage, -width / 2, -height / 2, width, height);
             ctx.restore();
           },
-          onFaceFrameProcessed: ({ face, faceFrame, overlayVisible, detection }) => {
-            lastFaceFrame = faceFrame;
-            lastFace = face;
-
-            if (face) {
-              const faceWidth = face.getWidth();
-
-              const deviationFaceWidth = Math.abs(FACE_WIDTH - faceWidth);
-              const deviationFacePosition = face.getFacePosiotion();
-              const overlayVisible = deviationFaceWidth > FACE_DEVIATION || deviationFacePosition > FACE_DEVIATION * 2;
-              if (overlayVisible) {
-                overlay.classList.add('overlay_visible');
-              } else {
-                overlay.classList.remove('overlay_visible');
-              }
+          onFaceFrameProcessed: (processedFrame) => {
+            if (!processedFrame.isFaceDetected()) {
+              captureButton.disabled = true;
+              return;
             }
+            const face = processedFrame.getFace();
+            const faceWidth = face.getWidth();
 
+            const deviationFaceWidth = Math.abs(FACE_WIDTH - faceWidth);
+            const deviationFacePosition = face.getFacePosiotion();
+            const overlayVisible = deviationFaceWidth > FACE_DEVIATION || deviationFacePosition > FACE_DEVIATION * 2;
+            if (overlayVisible) {
+              overlay.classList.add('overlay_visible');
+            } else {
+              overlay.classList.remove('overlay_visible');
+            }
+            captureButton.disabled = overlayVisible;
             for (const key in facePositions) {
               if (face.direction[key]()) {
                 facePositions[key].classList.add('face-position__direction_visible');
               } else {
                 facePositions[key].classList.remove('face-position__direction_visible');
               }
-
-              captureButton.disabled = overlayVisible;
             }
           },
           onLoaded: () => {
@@ -224,9 +220,6 @@
             height: 100,
           };
 
-          const leftEyeFrame = lastFace.getLeftEyeFrame();
-          const rightEyeFrame = lastFace.getRightEyeFrame();
-
           const getEyeVariance = async (data, eyeFrame, name) => {
             const cropped = await Processors.cropFrame(frame, eyeFrame, data);
             const croppedImage = await Processors.toImage(eyeFrame, cropped);
@@ -234,33 +227,46 @@
             const laplacian = await Processors.laplacian(eyeFrame, cropped, 1.2);
             const laplacianImage = await Processors.toImage(eyeFrame, laplacian);
 
-            const suppresedNoizeLaplacian = await Processors.suppressNoise(eyeFrame, laplacian, 10, 30);
+            const THRERSHOLD = 60;
+
+            const reluMiniProcessed = await Processors.pixelProcessor(eyeFrame, laplacian, (value) => value > THRERSHOLD ? value : 0);
+
+            const suppresedNoizeLaplacian = await Processors.suppressNoise(eyeFrame, reluMiniProcessed, 5, THRERSHOLD);
             const suppresedNoizeLaplacianImage = await Processors.toImage(eyeFrame, suppresedNoizeLaplacian);
-            const blurVarianceResult = await Processors.variance(laplacian);
-            const normanlizedBlurVariance = (blurVarianceResult * eyeFrame.width) / eyeFrame.height;
+            const blurVarianceResult = await Processors.variance(suppresedNoizeLaplacian);
+            const normalizedBlurVariance = (blurVarianceResult * eyeFrame.width) / eyeFrame.height;
 
             document.querySelector('.blur-detection__cropped_' + name).src = croppedImage;
             document.querySelector('.blur-detection__laplacian_' + name).src = laplacianImage;
             document.querySelector('.blur-detection__suppressed_' + name).src = suppresedNoizeLaplacianImage;
             document.querySelector('.blur-detection__variance_' + name).textContent =
-              Math.round(normanlizedBlurVariance);
+              Math.round(normalizedBlurVariance);
 
-            return normanlizedBlurVariance;
+            return Math.round(normalizedBlurVariance);
           };
 
-          const data = selfie.captureImage();
+          const capturedImage = await selfie.captureImage();
+          if (!capturedImage.isFaceDetected()) {
+            alert('Face not detected');
+            return;
+          }
+          const face = capturedImage.getFace();
+          const data = capturedImage.getImageData();
+          const leftEyeFrame = face.getLeftEyeFrame();
+          const rightEyeFrame = face.getRightEyeFrame();
+
           const image = await Processors.toImage(frame, data);
           const leftEyeVariance = await getEyeVariance(data, leftEyeFrame, 'left');
           const rightEyeVariance = await getEyeVariance(data, rightEyeFrame, 'right');
 
-          const normanlizedBlurVariance = leftEyeVariance + rightEyeVariance;
+          const normalizedBlurVariance = leftEyeVariance + rightEyeVariance;
 
           resultImage.src = image;
 
-          resultImageBlurred.textContent = 'Not blurred ' + Math.round(normanlizedBlurVariance);
-          if (normanlizedBlurVariance < 3000) {
+          resultImageBlurred.textContent = 'Not blurred ' + normalizedBlurVariance;
+          if (normalizedBlurVariance < 4000) {
             resultImageBlurred.classList.add('result-image__blurred_blurred');
-            resultImageBlurred.textContent = 'Blurred ' + normanlizedBlurVariance;
+            resultImageBlurred.textContent = 'Blurred ' + normalizedBlurVariance;
           } else {
             resultImageBlurred.classList.remove('result-image__blurred_blurred');
           }

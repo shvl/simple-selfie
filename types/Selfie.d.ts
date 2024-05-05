@@ -1,3 +1,4 @@
+import { CapturedImage } from "./CapturedImage";
 export interface Selfie {
     video: HTMLVideoElement;
     outputCanvas: HTMLCanvasElement;
@@ -5,5 +6,5 @@ export interface Selfie {
     stop(): void;
     startFaceDetection(): void;
     stopFaceDetection(): void;
-    captureImage(): Uint8ClampedArray;
+    captureImage(): Promise<CapturedImage>;
 }

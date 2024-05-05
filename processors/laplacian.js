@@ -35,15 +35,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var KERNEL = [0, 1, 0, 1, -4, 1, 0, 1, 0];
-function laplacian(frame, data) {
-    return __awaiter(this, void 0, void 0, function () {
+function laplacian(frame_1, data_1) {
+    return __awaiter(this, arguments, void 0, function (frame, data, thickness) {
+        if (thickness === void 0) { thickness = 2; }
         return __generator(this, function (_a) {
             return [2 /*return*/, new Promise(function (resolve) {
                     var newData = new Uint8ClampedArray(data.length);
-                    var THICKNESS = 2;
                     var width = frame.width, height = frame.height;
                     width = Math.floor(width);
                     height = Math.floor(height);
+                    for (var y = 0; y < height; y++) {
+                        for (var x = 0; x < width; x++) {
+                            var i = y * width * 4 + x * 4;
+                            newData[i] = 0;
+                            newData[i + 1] = 0;
+                            newData[i + 2] = 0;
+                            newData[i + 3] = 255;
+                        }
+                    }
                     for (var y = 1; y < height - 1; y++) {
                         for (var x = 1; x < width - 1; x++) {
                             var sum = 0;
@@ -52,7 +61,7 @@ function laplacian(frame, data) {
                                 for (var j = -1; j <= 1; j++) {
                                     var kernelIndex = (i + 1) * 3 + (j + 1);
                                     var pixelIndex = index + (i * width + j) * 4;
-                                    sum += data[pixelIndex] * KERNEL[kernelIndex] * THICKNESS;
+                                    sum += data[pixelIndex] * KERNEL[kernelIndex] * thickness;
                                 }
                             }
                             sum = sum * 3;
