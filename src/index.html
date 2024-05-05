@@ -222,7 +222,6 @@
                   </div>
                   <div class="blur-detection__variance blur-detection__variance_right"></div>
                 </div>
-                <img class="result-image__laplacian" src="" alt="" />
               </details>
             </div>
           </div>
@@ -332,7 +331,6 @@
           const getEyeVariance = async (data, eyeFrame, name) => {
             const cropped = await Processors.cropFrame(frame, eyeFrame, data);
             const croppedImage = await Processors.toImage(eyeFrame, cropped);
-            const resized = await Processors.resizeFrame(eyeFrame, faceFrame, cropped);
             const laplacian = await Processors.laplacian(eyeFrame, cropped, 1.2);
             const laplacianImage = await Processors.toImage(eyeFrame, laplacian);
 
