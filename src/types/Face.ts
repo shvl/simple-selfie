@@ -10,4 +10,6 @@ export interface Face {
   getLeftEyeFrame: () => Frame;
   getRightEyeFrame: () => Frame;
   getBetweenEyes: () => Point;
+  getMouthHeight: () => number;
+  getNose: () => Point;
 }

@@ -3,7 +3,6 @@ import { SelfieConfig } from './types/SelfieConfig';
 import { Selfie as ISelfie } from './types';
 import { Face } from './Face';
 import * as models from './models';
-import { setCanvasSize } from './utils/setCanvasSize';
 import { ProcessedFrame } from './ProcessedFrame';
 import { CapturedImage } from './CapturedImage';
 
@@ -17,6 +16,7 @@ export class Selfie implements ISelfie {
   private onFrameProcessedCallback: (frameData: CanvasRenderingContext2D | null, face: Face | null) => void = () =>
     null;
   private onLoaded: () => void = () => {};
+  private onResize: () => void = () => {};
   private debugCanvas: HTMLCanvasElement;
   private isPlayStarted = false;
   private container: HTMLElement;
@@ -45,8 +45,25 @@ export class Selfie implements ISelfie {
     this.onFaceFrameProcessedCallback = config.onFaceFrameProcessed || this.onFaceFrameProcessedCallback;
     this.onFrameProcessedCallback = config.onFrameProcessed || this.onFrameProcessedCallback;
     this.onLoaded = config.onLoaded || this.onLoaded;
+    this.onResize = () => {};
     this.resize = this.resize.bind(this);
     this.play = this.play.bind(this);
+  }
+
+  setOnFrameProcessedCallback(callback: (frameData: CanvasRenderingContext2D | null, face: Face | null) => void) {
+    this.onFrameProcessedCallback = callback;
+  }
+
+  setOnFaceFrameProcessedCallback(callback: (processedFrame: ProcessedFrame) => void) {
+    this.onFaceFrameProcessedCallback = callback;
+  }
+
+  setOnResize(callback: () => void) {
+    this.onResize = callback;
+  }
+
+  getContainer() {
+    return this.container;
   }
 
   updateCanvas() {
@@ -67,20 +84,13 @@ export class Selfie implements ISelfie {
   resize() {
     const videoWidth = this.video.videoWidth || 0;
     const videoHeight = this.video?.videoHeight || 0;
-    const scaleFactor =
-      Math.min(this.container.offsetWidth || 0, this.container.offsetHeight || 0) /
-      Math.min(videoWidth || 0, this.video?.videoHeight || 0);
-    const newWidth = Math.round(videoWidth * scaleFactor);
-    const newHeight = Math.round(videoHeight * scaleFactor);
 
     this.outputCanvas.width = videoWidth;
     this.outputCanvas.height = videoHeight;
 
-    setCanvasSize(this.outputCanvas, newWidth, newHeight);
-    setCanvasSize(this.debugCanvas, newWidth, newHeight);
-
     const displaySize = { width: videoWidth, height: videoHeight };
     faceapi.matchDimensions(this.debugCanvas, displaySize);
+    this.onResize();
   }
 
   async start() {
@@ -192,9 +202,20 @@ export class Selfie implements ISelfie {
       throw new Error('Video not initialized');
     }
     const face = await this.detectFace();
-    const frame = this.outputCanvas
-      ?.getContext('2d')
-      ?.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight);
+    const ctx = this.outputCanvas?.getContext('2d');
+    let frame: ImageData | undefined;
+    if (ctx) {
+      frame = this.outputCanvas?.getContext('2d')?.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight);
+    } else {
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = this.outputCanvas.width;
+      offscreenCanvas.height = this.outputCanvas.height;
+      const ctx = offscreenCanvas.getContext('2d');
+
+      ctx?.drawImage(this.outputCanvas, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+      frame = ctx?.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+      offscreenCanvas.remove();
+    }
 
     const inputData = frame?.data;
     return new CapturedImage(face, inputData);

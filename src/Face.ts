@@ -16,6 +16,8 @@ export class Face implements IFace {
   private rightBrow: Point;
   private leftEye: Point;
   private rightEye: Point;
+  private topLip: Point;
+  private bottomLip: Point;
   
 
   constructor(landmarks: FaceLandmarks68, frame: Size) {
@@ -31,6 +33,8 @@ export class Face implements IFace {
     this.leftEye = this.landmarks[36];
     this.rightEye = this.landmarks[45];
     this.direction = new FaceDirection(landmarks);
+    this.topLip = this.landmarks[62];
+    this.bottomLip = this.landmarks[66];
     this.frame = frame;
   }
 
@@ -103,6 +107,17 @@ export class Face implements IFace {
     return {
       x: Math.round(this.betweenEyes.x),
       y: Math.round(this.betweenEyes.y),
+    };
+  }
+
+  getMouthHeight(): number {
+    return Math.abs(this.topLip.y - this.bottomLip.y);
+  }
+
+  getNose(): Point {
+    return {
+      x: Math.round(this.nose.x),
+      y: Math.round(this.nose.y),
     };
   }
 }
